@@ -31,10 +31,10 @@ pytest tests/unit
 
 ## Быстрый старт
 
-Нужны Python 3.11+, Docker, Node.js 24 (для автотестов) и ключ Gemini API.
+Нужны Python 3.11+, Docker, Node.js 24 (для автотестов) и ключ Claude API ([platform.claude.com](https://platform.claude.com/settings/keys)). Бесплатного уровня у API нет: пополните баланс на несколько долларов, на весь курс этого хватит с запасом.
 
 ```bash
-cp .env.example .env              # GOOGLE_API_KEY, GITHUB_REPO, GITHUB_TOKEN
+cp .env.example .env              # ANTHROPIC_API_KEY, GITHUB_REPO, GITHUB_TOKEN
 python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
@@ -46,4 +46,6 @@ adk web --port 8080 assistant/agents                                          # 
 
 ## Сколько стоит модель
 
-Автопроверка не тратит токены: вместо Gemini в тестах работает `ScriptedLlm`, который отвечает по сценарию. Токены тратятся только когда вы сами говорите с агентом в `adk web`. Лимит на сессию задаёт `SESSION_TOKEN_BUDGET` (по умолчанию 200 000): зациклившийся агент остановится на нём, а не на вашем счёте.
+Автопроверка не тратит токены: вместо Claude в тестах работает `ScriptedLlm`, который отвечает по сценарию. Токены тратятся только когда вы сами говорите с агентом в `adk web`.
+
+Все агенты по умолчанию работают на Claude Haiku 5.5: $0,10 за миллион входных токенов и $0,50 за миллион выходных. Агенту, которому этого мало, можно дать Claude Sonnet 5.5 ($2 / $10) одной переменной: `AGENT_MODEL_<ИМЯ_АГЕНТА>=claude-sonnet-5-5`. Каким агентам это нужно, вы проверите на eval в модуле 7. Лимит на сессию задаёт `SESSION_TOKEN_BUDGET` (по умолчанию 200 000): зациклившийся агент остановится на нём, а не на вашем счёте.

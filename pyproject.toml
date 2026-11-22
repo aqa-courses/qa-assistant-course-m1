@@ -5,6 +5,7 @@ description = "QA assistant on Google ADK: the course's reference implementation
 requires-python = ">=3.11"
 dependencies = [
     "google-adk==2.15.0",
+    "anthropic>=2.12,<3",
     "httpx>=0.28,<1",
 ]
 

@@ -3,15 +3,47 @@
 from __future__ import annotations
 
 import os
+from typing import AsyncGenerator
 
-from google.adk.models import Gemini
-from google.genai import types  # noqa: F401  (types.HttpRetryOptions)
+from anthropic import AsyncAnthropic  # noqa: F401  (max_retries, timeout)
+from google.adk.models.anthropic_llm import AnthropicLlm
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
+from google.genai import types
 
-DEFAULT_MODEL = "gemini-3.5-flash"
+DEFAULT_MODEL = "claude-haiku-5-5"
 
 
 class MissingConfigError(RuntimeError):
     """A required setting is missing. The message is written for the agent and the user."""
+
+
+def with_adaptive_thinking(llm_request: LlmRequest) -> LlmRequest:
+    """Ask for adaptive thinking unless the agent configured thinking itself.
+
+    ADK hands an `output_schema` to Claude as a tool and, when the request has no
+    thinking config, forces the call to it (`tool_choice: tool`). Claude Sonnet 5.5
+    rejects forced tool use with a 400; with adaptive thinking ADK offers the tool
+    instead. Current Claude models think adaptively by default, so nothing else changes.
+    """
+    config = llm_request.config or types.GenerateContentConfig()
+    if config.thinking_config is None:
+        config.thinking_config = types.ThinkingConfig(thinking_budget=-1)  # -1: adaptive
+    llm_request.config = config
+    return llm_request
+
+
+class CourseClaude(AnthropicLlm):
+    """Claude through the Anthropic API (ANTHROPIC_API_KEY), always with adaptive thinking.
+
+    A bare "claude-..." string in `Agent(model=...)` would resolve to ADK's `Claude`,
+    which goes through Vertex AI. The course uses the Anthropic API directly.
+    """
+
+    async def generate_content_async(self, llm_request: LlmRequest,
+                                     stream: bool = False) -> AsyncGenerator[LlmResponse, None]:
+        async for response in super().generate_content_async(with_adaptive_thinking(llm_request), stream):
+            yield response
 
 
 def model_name(agent_name: str) -> str:
@@ -20,15 +52,15 @@ def model_name(agent_name: str) -> str:
     return DEFAULT_MODEL
 
 
-def get_llm(agent_name: str) -> Gemini:
-    """The model for one agent, with retries on 408/5xx.
+def get_llm(agent_name: str) -> CourseClaude:
+    """The model for one agent, with retries in the Anthropic SDK and a finite timeout.
 
     Only the model call is retried. Tools are never re-run by this retry,
     so a tool with side effects cannot fire twice because of it.
     """
-    # TODO М1.1: pass retry_options=types.HttpRetryOptions(...): a few attempts with
-    #  exponential backoff on 408 and 5xx. Not on 429: think about why.
-    return Gemini(model=model_name(agent_name))
+    # TODO М1.1: pass client=AsyncAnthropic(max_retries=..., timeout=...). Which errors does
+    #  the SDK retry, and why is retrying 429 fine here? How long may one call hang by default?
+    return CourseClaude(model=model_name(agent_name))
 
 
 def require_env(name: str, hint: str) -> str:
