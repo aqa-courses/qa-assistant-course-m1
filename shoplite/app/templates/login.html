@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Вход{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Вход</h1>
+  <form method="post" action="/login" class="card form" data-test="login-form">
+    {% if login_error %}<div class="alert err" role="alert" data-test="{{ dt('login-error') }}">{{ login_error }}</div>{% endif %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <label>Email
+      <input type="email" name="email" value="{{ email or '' }}" autocomplete="username" required data-test="{{ dt('login-email') }}">
+    </label>
+    <label>Пароль
+      <input type="password" name="password" autocomplete="current-password" required data-test="{{ dt('login-password') }}">
+    </label>
+    <button type="submit" class="btn primary" data-test="{{ dt('login-submit') }}">Войти</button>
+  </form>
+  <p class="muted small">Тестовые пользователи: alice@example.com / password123, restricted@example.com / password123.</p>
+</section>
+{% endblock %}

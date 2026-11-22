@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Оформление заказа{% endblock %}
+{% block content %}
+<h1>Оформление заказа</h1>
+<div class="cart-bottom">
+  <form method="post" action="/checkout" class="card form" data-test="checkout-form">
+    <label>Адрес доставки
+      <textarea name="address" rows="3" placeholder="Город, улица, дом, квартира" data-test="{{ dt('checkout-address') }}">{{ address or '' }}</textarea>
+    </label>
+    <button type="submit" class="btn primary" data-test="{{ dt('checkout-submit') }}">Подтвердить заказ</button>
+  </form>
+  <dl class="card summary" data-test="checkout-summary">
+    {% for line in cart.lines %}<dt>{{ line.name }} × {{ line.qty }}</dt><dd>{{ line.amount|rub }}</dd>{% endfor %}
+    <dt>Скидка</dt><dd>{% if cart.discount %}−{{ cart.discount|rub }}{% else %}0 ₽{% endif %}</dd>
+    <dt>Доставка</dt><dd>{% if cart.shipping %}{{ cart.shipping|rub }}{% else %}бесплатно{% endif %}</dd>
+    <dt class="total">Итого</dt><dd class="total" data-test="checkout-total">{{ cart.total|rub }}</dd>
+  </dl>
+</div>
+{% endblock %}

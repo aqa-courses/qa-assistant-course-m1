@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Корзина{% endblock %}
+
+{% macro qty_form(line) %}
+<form method="post" action="/cart/update" class="inline">
+  <input type="hidden" name="product_id" value="{{ line.product_id }}">
+  <input type="number" name="qty" value="{{ line.qty }}" min="0" max="{{ max_qty }}" aria-label="Количество" data-test="{{ dt('cart-item-qty') }}" onchange="this.form.submit()">
+</form>
+{% endmacro %}
+
+{% macro remove_form(line) %}
+<form method="post" action="/cart/remove" class="inline">
+  <input type="hidden" name="product_id" value="{{ line.product_id }}">
+  <button type="submit" class="link" data-test="{{ dt('cart-item-remove') }}">Удалить</button>
+</form>
+{% endmacro %}
+
+{% block content %}
+<h1>Корзина</h1>
+{% if not cart.lines %}
+<p class="empty" data-test="cart-empty">Корзина пуста. <a href="/catalog" data-test="go-shopping">Перейти в каталог</a></p>
+{% else %}
+
+{% if chaos.ui_version == 2 %}
+{# UI v2: the cart was redesigned as cards #}
+<div class="cart-cards" data-test="basket">
+  {% for line in cart.lines %}
+  <div class="card cart-card" data-test="{{ dt('cart-item') }}" data-product-id="{{ line.product_id }}">
+    <div>
+      <a href="/product/{{ line.product_id }}" data-test="basket-line-name">{{ line.name }}</a>
+      {% if line.on_sale %}<span class="sale">Скидка</span>{% endif %}
+      <div class="muted small">{{ line.price|rub }} × {{ line.qty }}</div>
+    </div>
+    <div class="row">{{ qty_form(line) }}<strong data-test="basket-line-amount">{{ line.amount|rub }}</strong>{{ remove_form(line) }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<table class="cart" data-test="cart-table">
+  <thead><tr><th>Товар</th><th>Цена</th><th>Количество</th><th>Сумма</th><th></th></tr></thead>
+  <tbody>
+  {% for line in cart.lines %}
+  <tr data-test="{{ dt('cart-item') }}" data-product-id="{{ line.product_id }}">
+    <td><a href="/product/{{ line.product_id }}" data-test="cart-item-name">{{ line.name }}</a>{% if line.on_sale %} <span class="sale">Скидка</span>{% endif %}</td>
+    <td>{{ line.price|rub }}</td>
+    <td>{{ qty_form(line) }}</td>
+    <td data-test="cart-item-amount">{{ line.amount|rub }}</td>
+    <td>{{ remove_form(line) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<div class="cart-bottom">
+  <form method="post" action="/cart/promo" class="card form promo" data-test="promo-form">
+    <label>Промокод
+      <input type="text" name="code" value="{{ cart.promo or '' }}" placeholder="SAVE10" data-test="{{ dt('promo-input') }}">
+    </label>
+    <button type="submit" class="btn" data-test="{{ dt('promo-apply') }}">Применить</button>
+    {% if cart.promo %}<p class="small" data-test="promo-active">Действует: {{ cart.promo }}</p>{% endif %}
+    {% if cart.promo_note %}<p class="small warn" data-test="promo-note">{{ cart.promo_note }}</p>{% endif %}
+  </form>
+
+  <dl class="card summary" data-test="cart-summary">
+    <dt>Товары</dt><dd data-test="{{ dt('cart-subtotal') }}">{{ cart.subtotal|rub }}</dd>
+    <dt>Скидка</dt><dd data-test="{{ dt('cart-discount') }}">{% if cart.discount %}−{{ cart.discount|rub }}{% else %}0 ₽{% endif %}</dd>
+    <dt>Доставка</dt><dd data-test="{{ dt('cart-shipping') }}">{% if cart.shipping %}{{ cart.shipping|rub }}{% else %}бесплатно{% endif %}</dd>
+    <dt class="total">Итого</dt><dd class="total" data-test="{{ dt('cart-total') }}">{{ cart.total|rub }}</dd>
+    {% if cart.shipping %}<p class="muted small" data-test="free-shipping-hint">Бесплатная доставка от {{ free_from|rub }}</p>{% endif %}
+    <a href="/checkout" class="btn primary" data-test="{{ dt('checkout-button') }}">Оформить заказ</a>
+  </dl>
+</div>
+{% endif %}
+{% endblock %}

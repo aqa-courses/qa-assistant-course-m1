@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Избранное{% endblock %}
+{% block content %}
+<h1>Избранное</h1>
+{% if items %}
+<ul class="grid" data-test="wishlist-items">
+  {% for p in items %}
+  <li class="card product" data-test="wishlist-item" data-product-id="{{ p.id }}">
+    <a href="/product/{{ p.id }}" class="title">{{ p.name }}</a>
+    <div class="price">{{ p.price|rub }}</div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty" data-test="wishlist-empty">В избранном пока пусто.</p>
+{% endif %}
+{% endblock %}

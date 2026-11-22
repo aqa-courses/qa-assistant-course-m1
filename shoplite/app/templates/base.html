@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Shoplite{% endblock %} · Shoplite</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="ui-v{{ chaos.ui_version }}">
+  <header class="header">
+    <div class="wrap header-inner">
+      <a class="logo" href="/catalog" data-test="logo">Shop<b>lite</b></a>
+      <nav aria-label="Основное меню">
+        <a href="/catalog" data-test="{{ dt('nav-catalog') }}">Каталог</a>
+        {% if chaos.feature_wishlist and user %}
+        <a href="/wishlist" data-test="nav-wishlist">Избранное</a>
+        {% endif %}
+        <a href="/cart" data-test="{{ dt('nav-cart') }}">Корзина{% if cart_count %} <span class="badge" data-test="cart-count">{{ cart_count }}</span>{% endif %}</a>
+        {% if user %}
+        <a href="/profile" data-test="{{ dt('nav-profile') }}">{{ user.name }}</a>
+        <form method="post" action="/logout" class="inline">
+          <button type="submit" class="link" data-test="{{ dt('nav-logout') }}">Выйти</button>
+        </form>
+        {% else %}
+        <a href="/login" data-test="nav-login">Войти</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    {% if note %}<div class="alert ok" role="status" data-test="note">{{ note }}</div>{% endif %}
+    {% if error %}<div class="alert err" role="alert" data-test="error">{{ error }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer wrap">Shoplite — учебный стенд курса. Все данные вымышлены.</footer>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Заказ №{{ order.id }}{% endblock %}
+{% block content %}
+<section class="card" data-test="order-confirmation">
+  <h1>Заказ <span data-test="{{ dt('order-number') }}">№{{ order.id }}</span> оформлен</h1>
+  <p class="muted">Адрес доставки: <span data-test="order-address">{{ order.address }}</span></p>
+  <table class="cart" data-test="order-items">
+    <tbody>
+    {% for i in items %}<tr><td>{{ i.name }}</td><td>{{ i.qty }} шт.</td><td>{{ (i.price * i.qty)|rub }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <p>Итого: <strong data-test="order-total">{{ order.total|rub }}</strong>{% if order.promo %} (промокод {{ order.promo }}){% endif %}</p>
+  <a href="/catalog" class="btn" data-test="continue-shopping">Продолжить покупки</a>
+</section>
+{% endblock %}

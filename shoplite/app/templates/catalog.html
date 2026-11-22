@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Каталог{% endblock %}
+{% block content %}
+<h1>Каталог</h1>
+<form method="get" action="/catalog" class="filters" role="search" data-test="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Поиск по названию" aria-label="Поиск" data-test="{{ dt('search-input') }}">
+  <select name="category" aria-label="Категория" data-test="{{ dt('category-filter') }}">
+    <option value="">Все категории</option>
+    {% for c in categories %}<option value="{{ c }}" {% if c == category %}selected{% endif %}>{{ c }}</option>{% endfor %}
+  </select>
+  <input type="number" name="min_price" value="{{ min_price }}" min="0" placeholder="Цена от, ₽" aria-label="Цена от" data-test="price-min">
+  <input type="number" name="max_price" value="{{ max_price }}" min="0" placeholder="до, ₽" aria-label="Цена до" data-test="price-max">
+  <select name="sort" aria-label="Сортировка" data-test="sort">
+    <option value="">По умолчанию</option>
+    <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Сначала дешёвые</option>
+    <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Сначала дорогие</option>
+    <option value="name" {% if sort == 'name' %}selected{% endif %}>По названию</option>
+  </select>
+  <button type="submit" class="btn" data-test="{{ dt('search-submit') }}">Найти</button>
+</form>
+{% if hint %}<p class="muted" data-test="search-hint">{{ hint }}</p>{% endif %}
+
+{% if products %}
+<p class="muted small" data-test="results-count">Найдено товаров: {{ products|length }}</p>
+<ul class="grid" data-test="product-list">
+  {% for p in products %}
+  <li class="card product" data-test="{{ dt('product-card') }}" data-product-id="{{ p.id }}">
+    <a href="/product/{{ p.id }}" class="title" data-test="{{ dt('product-title') }}">{{ p.name }}</a>
+    <span class="muted small">{{ p.category }}</span>
+    <div class="price" data-test="{{ dt('product-price') }}">
+      {{ p.price|rub }}{% if p.old_price %} <s class="muted">{{ p.old_price|rub }}</s> <span class="sale" data-test="sale-badge">Скидка</span>{% endif %}
+    </div>
+    {% if p.stock > 0 %}
+    <form method="post" action="/cart/add">
+      <input type="hidden" name="product_id" value="{{ p.id }}">
+      <input type="hidden" name="back_to" value="/catalog">
+      <button type="submit" class="btn primary" data-test="{{ dt('add-to-cart') }}">В корзину</button>
+    </form>
+    {% else %}
+    <button class="btn" disabled data-test="out-of-stock">Нет в наличии</button>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty" data-test="empty-results">Ничего не найдено. Попробуйте изменить запрос.</p>
+{% endif %}
+{% endblock %}
