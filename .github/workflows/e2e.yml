@@ -1,0 +1,90 @@
+name: e2e
+
+on:
+  push:
+    branches: [main]
+    paths: ['shoplite/**', 'autotests/**', '.github/workflows/e2e.yml']
+  pull_request:
+    paths: ['shoplite/**', 'autotests/**', '.github/workflows/e2e.yml']
+  # Manual runs with fault flags: this is how the course produces red runs on demand.
+  workflow_dispatch:
+    inputs:
+      ui_version:
+        description: 'UI_VERSION (2 = renamed data-test, cart as cards)'
+        type: choice
+        options: ['1', '2']
+        default: '1'
+      bug_cart_total:
+        description: 'BUG_CART_TOTAL: the total ignores the promo discount'
+        type: boolean
+        default: false
+      flaky_search:
+        description: 'FLAKY_SEARCH: probability 0..1 of a slow search'
+        type: string
+        default: '0'
+      db_down:
+        description: 'DB_DOWN: pages and API answer 503'
+        type: boolean
+        default: false
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SHOPLITE_URL: http://localhost:8000
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Start Shoplite
+        run: |
+          docker build -t shoplite ./shoplite
+          docker run -d --name shoplite -p 8000:8000 \
+            -e UI_VERSION='${{ inputs.ui_version || '1' }}' \
+            -e BUG_CART_TOTAL='${{ inputs.bug_cart_total && '1' || '0' }}' \
+            -e FLAKY_SEARCH='${{ inputs.flaky_search || '0' }}' \
+            -e DB_DOWN='${{ inputs.db_down && '1' || '0' }}' \
+            shoplite
+          # /__chaos answers even with DB_DOWN, unlike /health
+          for i in $(seq 1 30); do
+            curl -sf "$SHOPLITE_URL/__chaos" && exit 0
+            sleep 1
+          done
+          docker logs shoplite
+          exit 1
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: autotests/package-lock.json
+
+      - name: Install dependencies
+        working-directory: autotests
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run tests
+        working-directory: autotests
+        run: npx playwright test
+
+      - name: Shoplite logs
+        if: failure()
+        run: docker logs shoplite
+
+      # The RCA agent downloads this artifact: results.json + traces of failed tests.
+      - name: Upload results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-results
+          path: |
+            autotests/results/
+            autotests/test-results/
+            autotests/playwright-report/
+          retention-days: 14

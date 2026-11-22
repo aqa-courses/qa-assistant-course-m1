@@ -1,0 +1,15 @@
+{
+  "name": "shoplite-autotests",
+  "private": true,
+  "description": "Playwright e2e tests for the Shoplite training stand",
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
