@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio  # noqa: F401
-import functools  # noqa: F401
-import inspect  # noqa: F401
-from typing import Any
+import asyncio
+import functools
+import inspect
+from typing import Any, Callable
 
 
 def offload_blocking_tools(tools: list[Any]) -> list[Any]:
@@ -13,11 +13,26 @@ def offload_blocking_tools(tools: list[Any]) -> list[Any]:
 
     ADK calls a plain ``def`` tool right in the event loop. While a slow tool
     waits on the network, nothing else in the process runs: not other users'
-    sessions, not ``/health``.
+    sessions, not ``/health``. A liveness probe that does not get an answer is
+    a dead container.
 
-    Async functions and tool objects must be returned as is. A sync function
-    must come back as an ``async def`` that the model sees exactly like the
-    original: same name, docstring and parameters.
+    Each sync function is wrapped into an ``async def`` that awaits
+    ``asyncio.to_thread``. ``functools.wraps`` keeps the name, docstring,
+    annotations and ``__wrapped__``, so ADK builds exactly the same tool
+    declaration for the model. Async functions and tool objects are returned
+    as is.
     """
-    # TODO М1.4 (homework): first reproduce the hang, see modules/m01/README.md. Then fix it here.
-    return list(tools)
+    return [_offload(t) if _is_sync_function(t) else t for t in tools]
+
+
+def _is_sync_function(tool: Any) -> bool:
+    return inspect.isfunction(tool) and not (
+        inspect.iscoroutinefunction(tool) or inspect.isasyncgenfunction(tool))
+
+
+def _offload(func: Callable[..., Any]) -> Callable[..., Any]:
+    @functools.wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return await asyncio.to_thread(func, *args, **kwargs)
+
+    return wrapper

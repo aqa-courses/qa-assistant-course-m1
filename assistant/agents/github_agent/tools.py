@@ -99,6 +99,17 @@ def list_workflow_runs(workflow: str = "e2e.yml", branch: str = "", status: str 
     } for r in runs[:limit]]}
 
 
+def _clean_log(raw: str) -> list[str]:
+    return _ANSI.sub("", _TIMESTAMP.sub("", raw)).splitlines()
+
+
+def _log_tail(lines: list[str], tail_lines: int) -> str:
+    """The lines before the last ##[error]: after it the runner only cleans up."""
+    errors = [i for i, line in enumerate(lines) if line.startswith(_ERROR)]
+    end = errors[-1] + 1 if errors else len(lines)
+    return "\n".join(lines[max(0, end - tail_lines):end])
+
+
 @_errors_as_result
 def get_failed_job_logs(run_id: int, tail_lines: int = 150) -> dict[str, Any]:
     """Returns the failed jobs of a workflow run: error annotations and the end of each log.
@@ -114,11 +125,24 @@ def get_failed_job_logs(run_id: int, tail_lines: int = 150) -> dict[str, Any]:
         {"run_id", "failed_jobs": [{"id", "name", "failed_steps", "errors", "log_tail", "url"}]}.
         "errors" are the "##[error]" lines. An empty failed_jobs list means no job of the run failed.
     """
-    # TODO М1.2: GET /repos/{repo}/actions/runs/{run_id}/jobs?filter=latest, keep jobs with
-    #  conclusion "failure"; for each, GET /repos/{repo}/actions/jobs/{id}/logs
-    #  (accept="application/vnd.github.raw"). Clean the log with _TIMESTAMP and _ANSI,
-    #  collect the _ERROR lines, cut the tail at the last of them.
-    raise NotImplementedError("М1.2: get_failed_job_logs")
+    tail_lines = max(20, min(int(tail_lines), 500))
+    repo = _repo()
+    jobs = _github_get(f"/repos/{repo}/actions/runs/{run_id}/jobs", {"filter": "latest"}).json().get("jobs", [])
+    failed = []
+    for job in jobs:
+        if job.get("conclusion") != "failure":
+            continue
+        raw = _github_get(f"/repos/{repo}/actions/jobs/{job['id']}/logs", accept="application/vnd.github.raw").text
+        lines = _clean_log(raw)
+        failed.append({
+            "id": job["id"],
+            "name": job.get("name"),
+            "failed_steps": [s["name"] for s in job.get("steps", []) if s.get("conclusion") == "failure"],
+            "errors": [line.removeprefix(_ERROR) for line in lines if line.startswith(_ERROR)],
+            "log_tail": _log_tail(lines, tail_lines),
+            "url": job.get("html_url"),
+        })
+    return {"run_id": run_id, "failed_jobs": failed}
 
 
 @_errors_as_result
@@ -132,6 +156,7 @@ def read_repo_file(path: str, ref: str = "main") -> dict[str, Any]:
     Returns:
         {"path", "ref", "content"}
     """
-    # TODO М1.2: GET /repos/{repo}/contents/{path}?ref=... with accept="application/vnd.github.raw+json"
-    #  returns the file as plain text. Strip a leading "/" from path.
-    raise NotImplementedError("М1.2: read_repo_file")
+    path = path.strip().lstrip("/")
+    content = _github_get(f"/repos/{_repo()}/contents/{path}", {"ref": ref},
+                          accept="application/vnd.github.raw+json").text
+    return {"path": path, "ref": ref, "content": content}

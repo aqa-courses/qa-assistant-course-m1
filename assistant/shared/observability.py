@@ -6,16 +6,16 @@ None lets ADK go on as usual; a returned value replaces what ADK would do.
 
 from __future__ import annotations
 
-import json  # noqa: F401
+import json
 import logging
 from typing import Any
 
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmRequest, LlmResponse
 from google.adk.tools import BaseTool, ToolContext
-from google.genai import types  # noqa: F401
+from google.genai import types
 
-from assistant.shared.config import env_int  # noqa: F401
+from assistant.shared.config import env_int
 
 log = logging.getLogger("assistant")
 
@@ -29,46 +29,77 @@ DEFAULT_MAX_TOOL_RESPONSE_CHARS = 20_000
 DEFAULT_SESSION_TOKEN_BUDGET = 200_000
 
 
+def _short(value: Any, limit: int = 200) -> str:
+    text = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
+    return text if len(text) <= limit else text[:limit] + f"… (+{len(text) - limit})"
+
+
 # ---- tools ---------------------------------------------------------------
 
 def log_tool_call(tool: BaseTool, args: dict[str, Any], tool_context: ToolContext) -> None:
-    # TODO М1.3: log the tool name, its arguments (shortened) and the agent name.
-    return None
+    log.info("tool %s(%s) agent=%s", tool.name, _short(args), tool_context.agent_name)
+    return None  # None: run the tool as usual
 
 
 def truncate_tool_response(tool: BaseTool, args: dict[str, Any], tool_context: ToolContext,
                            tool_response: Any) -> dict[str, Any] | None:
     """Replace a result bigger than MAX_TOOL_RESPONSE_CHARS with its head and a note.
 
-    Return {"truncated": True, "original_chars": ..., "head": ..., "note": ...},
-    the note telling the model what happened. Return None for a small result.
+    One oversized result (a full CI log, a screenshot in base64) goes into every
+    following model call of the session: it eats the budget and can exceed the
+    context window. The note tells the model what happened, so it can ask for less.
     """
-    # TODO М1.3
-    return None
+    limit = env_int("MAX_TOOL_RESPONSE_CHARS", DEFAULT_MAX_TOOL_RESPONSE_CHARS)
+    text = tool_response if isinstance(tool_response, str) else json.dumps(
+        tool_response, ensure_ascii=False, default=str)
+    if len(text) <= limit:
+        return None  # None: keep the original result
+    log.warning("tool %s returned %d chars, truncated to %d", tool.name, len(text), limit)
+    return {
+        "truncated": True,
+        "original_chars": len(text),
+        "head": text[:limit],
+        "note": (f"Ответ инструмента обрезан до {limit} из {len(text)} символов. "
+                 "Если нужно больше, запроси меньший фрагмент."),
+    }
 
 
 def tool_error_to_result(tool: BaseTool, args: dict[str, Any], tool_context: ToolContext,
-                         error: Exception) -> dict[str, Any] | None:
-    """An exception in a tool becomes {"error": "<Type>: <message>"} the model can react to."""
-    # TODO М1.3
-    return None
+                         error: Exception) -> dict[str, Any]:
+    """An exception in a tool becomes a result the model can read and react to."""
+    log.exception("tool %s failed", tool.name, exc_info=error)
+    return {"error": f"{type(error).__name__}: {error}"}
 
 
 # ---- model ---------------------------------------------------------------
 
 def count_tokens(callback_context: CallbackContext, llm_response: LlmResponse) -> None:
-    """Add llm_response.usage_metadata to the session state: MODEL_CALLS, TOKENS_* keys."""
-    # TODO М1.3
+    usage = llm_response.usage_metadata
+    state = callback_context.state
+    state[MODEL_CALLS] = state.get(MODEL_CALLS, 0) + 1
+    if usage is None:
+        return None
+    state[TOKENS_PROMPT] = state.get(TOKENS_PROMPT, 0) + (usage.prompt_token_count or 0)
+    state[TOKENS_OUTPUT] = state.get(TOKENS_OUTPUT, 0) + (usage.candidates_token_count or 0)
+    state[TOKENS_TOTAL] = state.get(TOKENS_TOTAL, 0) + (usage.total_token_count or 0)
+    log.info("model %s: +%s tokens, session total %s", callback_context.agent_name,
+             usage.total_token_count, state[TOKENS_TOTAL])
     return None
 
 
 def enforce_token_budget(callback_context: CallbackContext, llm_request: LlmRequest) -> LlmResponse | None:
-    """Once the session spent SESSION_TOKEN_BUDGET tokens, answer instead of the model.
+    """Stop calling the model once the session spent SESSION_TOKEN_BUDGET tokens.
 
-    The answer must say "Лимит токенов" and suggest starting a new session.
+    Returning a response from before_model skips the model call: a looping agent
+    stops here instead of on the bill.
     """
-    # TODO М1.3
-    return None
+    budget = env_int("SESSION_TOKEN_BUDGET", DEFAULT_SESSION_TOKEN_BUDGET)
+    spent = callback_context.state.get(TOKENS_TOTAL, 0)
+    if spent < budget:
+        return None
+    log.warning("session token budget exhausted: %s of %s", spent, budget)
+    return LlmResponse(content=types.Content(role="model", parts=[types.Part(
+        text=f"Лимит токенов на сессию исчерпан ({spent} из {budget}). Начни новую сессию.")]))
 
 
 AGENT_CALLBACKS: dict[str, Any] = {
