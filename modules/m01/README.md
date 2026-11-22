@@ -9,6 +9,7 @@
 - `assistant/agents/github_agent/agent.py` — агент: инструкция, описание, список инструментов.
 - `assistant/agents/github_agent/tools.py` — HTTP-вызов GitHub `_github_get` и готовый инструмент `list_workflow_runs` как образец.
 - `assistant/app.py` — FastAPI-приложение ADK с `/health`.
+- `assistant/shared/config.py` — `CourseClaude`: Claude через Anthropic API с адаптивными размышлениями. Зачем свой класс — в уроке.
 - `tests/helpers/scripted_llm.py` — `ScriptedLlm`, модель по сценарию для тестов.
 
 ## Задания
@@ -18,7 +19,7 @@
 ### 1. Модель и повторы — `assistant/shared/config.py`
 
 - `model_name(agent)`: `AGENT_MODEL_<AGENT>` → `AGENT_MODEL` → `DEFAULT_MODEL`. Так можно дать дорогую модель одному агенту, не трогая остальных.
-- `get_llm(agent)`: `Gemini` с `retry_options`. Повторять 408 и 5xx, но **не 429**: минутная квота за секунды ожидания не восстановится, повтор только сожжёт её остаток.
+- `get_llm(agent)`: `CourseClaude` со своим клиентом `AsyncAnthropic(max_retries=..., timeout=...)`. Временные сбои и 429 SDK повторяет сам, выдерживая паузу из `retry-after`. Ваша часть — ограничить число повторов и время одного вызова: по умолчанию SDK ждёт ответа до 10 минут.
 
 Тесты: `tests/unit/test_m01_config.py`.
 

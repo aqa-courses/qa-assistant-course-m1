@@ -3,28 +3,53 @@
 from __future__ import annotations
 
 import os
+from typing import AsyncGenerator
 
-from google.adk.models import Gemini
+from anthropic import AsyncAnthropic
+from google.adk.models.anthropic_llm import AnthropicLlm
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
-DEFAULT_MODEL = "gemini-3.5-flash"
+DEFAULT_MODEL = "claude-haiku-5-5"
 
-# Retry model calls on timeouts and server errors only.
-# 429 is deliberately absent: a per-minute quota does not recover in the few
-# seconds a retry waits, so retrying only burns more of it and delays the error.
-RETRY_STATUS_CODES = (408, 500, 502, 503, 504)
-RETRY_OPTIONS = types.HttpRetryOptions(
-    attempts=4,          # the first call plus 3 retries
-    initial_delay=1.0,
-    max_delay=20.0,
-    exp_base=2.0,
-    jitter=1.0,
-    http_status_codes=list(RETRY_STATUS_CODES),
-)
+# The SDK retries what passes by itself while it waits: 408, 409, 5xx, dropped connections
+# and 429. Anthropic's rate limits refill continuously and a 429 carries retry-after, which
+# the SDK honours. 400/401/403/404 are never retried: the same request fails the same way.
+MAX_RETRIES = 4          # the first call plus 4 retries, with exponential backoff
+TIMEOUT_SECONDS = 120.0  # per call; the SDK default is 10 minutes
 
 
 class MissingConfigError(RuntimeError):
     """A required setting is missing. The message is written for the agent and the user."""
+
+
+def with_adaptive_thinking(llm_request: LlmRequest) -> LlmRequest:
+    """Ask for adaptive thinking unless the agent configured thinking itself.
+
+    ADK hands an `output_schema` to Claude as a tool and, when the request has no
+    thinking config, forces the call to it (`tool_choice: tool`). Claude Sonnet 5.5
+    rejects forced tool use with a 400; with adaptive thinking ADK offers the tool
+    instead. Current Claude models think adaptively by default, so nothing else changes.
+    """
+    config = llm_request.config or types.GenerateContentConfig()
+    if config.thinking_config is None:
+        config.thinking_config = types.ThinkingConfig(thinking_budget=-1)  # -1: adaptive
+    llm_request.config = config
+    return llm_request
+
+
+class CourseClaude(AnthropicLlm):
+    """Claude through the Anthropic API (ANTHROPIC_API_KEY), always with adaptive thinking.
+
+    A bare "claude-..." string in `Agent(model=...)` would resolve to ADK's `Claude`,
+    which goes through Vertex AI. The course uses the Anthropic API directly.
+    """
+
+    async def generate_content_async(self, llm_request: LlmRequest,
+                                     stream: bool = False) -> AsyncGenerator[LlmResponse, None]:
+        async for response in super().generate_content_async(with_adaptive_thinking(llm_request), stream):
+            yield response
 
 
 def model_name(agent_name: str) -> str:
@@ -33,13 +58,14 @@ def model_name(agent_name: str) -> str:
     return per_agent or os.getenv("AGENT_MODEL", "").strip() or DEFAULT_MODEL
 
 
-def get_llm(agent_name: str) -> Gemini:
-    """The model for one agent, with retries on 408/5xx.
+def get_llm(agent_name: str) -> CourseClaude:
+    """The model for one agent, with retries in the Anthropic SDK and a finite timeout.
 
     Only the model call is retried. Tools are never re-run by this retry,
     so a tool with side effects cannot fire twice because of it.
     """
-    return Gemini(model=model_name(agent_name), retry_options=RETRY_OPTIONS)
+    client = AsyncAnthropic(max_retries=MAX_RETRIES, timeout=TIMEOUT_SECONDS)
+    return CourseClaude(model=model_name(agent_name), client=client)
 
 
 def require_env(name: str, hint: str) -> str:
