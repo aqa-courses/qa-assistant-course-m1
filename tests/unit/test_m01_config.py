@@ -18,12 +18,16 @@ def test_model_falls_back_from_agent_to_global_to_default(monkeypatch):
 def test_get_llm_goes_to_the_anthropic_api_with_retries_and_a_finite_timeout():
     llm = config.get_llm("github_agent")
     assert isinstance(llm, AnthropicLlm), "a bare 'claude-...' string would go through Vertex AI"
-    client = llm.client
-    assert client is not None, "pass your own AsyncAnthropic: that is where retries and the timeout live"
-    assert client.max_retries >= 2
-    timeout = client.timeout
-    seconds = getattr(timeout, "read", timeout)  # a float or an httpx Timeout
-    assert seconds is not None and seconds <= 300, "the SDK default is 10 minutes per call"
+    assert llm.max_retries >= 2
+    assert llm.timeout <= 300, "the SDK default is 10 minutes per call"
+    client = llm._anthropic_client
+    assert (client.max_retries, client.timeout) == (llm.max_retries, llm.timeout)
+
+
+def test_a_model_can_be_deep_copied():
+    """ADK and the tests copy agents together with their models; a live client cannot be copied."""
+    llm = config.get_llm("github_agent")
+    assert llm.model_copy(deep=True).model == llm.model
 
 
 def test_requests_without_a_thinking_config_get_adaptive_thinking():

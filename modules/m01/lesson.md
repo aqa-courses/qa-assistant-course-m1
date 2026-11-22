@@ -104,12 +104,11 @@ AGENT_MODEL_GITHUB_AGENT → AGENT_MODEL → значение по умолча�
 
 ### Повторы и таймаут
 
-Вызов модели — сетевой вызов, и он падает. Повторы живут в клиенте Anthropic SDK, который вы передаёте модели:
+Вызов модели — сетевой вызов, и он падает. Повторы живут в клиенте Anthropic SDK, а `CourseClaude` передаёт ему два параметра:
 
 ```python
-from anthropic import AsyncAnthropic
-
-AsyncAnthropic(
+CourseClaude(
+    model=model_name(agent_name),
     max_retries=4,     # первая попытка и четыре повтора, паузы растут экспоненциально
     timeout=120.0,     # секунд на один вызов; по умолчанию — 10 минут
 )
