@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import os
+from functools import cached_property
 from typing import AsyncGenerator
 
-from anthropic import AsyncAnthropic  # noqa: F401  (max_retries, timeout)
+from anthropic import AsyncAnthropic
 from google.adk.models.anthropic_llm import AnthropicLlm
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
@@ -40,6 +41,15 @@ class CourseClaude(AnthropicLlm):
     which goes through Vertex AI. The course uses the Anthropic API directly.
     """
 
+    max_retries: int = 2      # the Anthropic SDK defaults
+    timeout: float = 600.0    # seconds per call
+
+    @cached_property
+    def _anthropic_client(self) -> AsyncAnthropic:
+        # Built on the first real call, not stored as a field: a live client cannot be
+        # deep-copied, and agents (with their models) get copied in tests and by ADK.
+        return AsyncAnthropic(max_retries=self.max_retries, timeout=self.timeout)
+
     async def generate_content_async(self, llm_request: LlmRequest,
                                      stream: bool = False) -> AsyncGenerator[LlmResponse, None]:
         async for response in super().generate_content_async(with_adaptive_thinking(llm_request), stream):
@@ -58,8 +68,8 @@ def get_llm(agent_name: str) -> CourseClaude:
     Only the model call is retried. Tools are never re-run by this retry,
     so a tool with side effects cannot fire twice because of it.
     """
-    # TODO М1.1: pass client=AsyncAnthropic(max_retries=..., timeout=...). Which errors does
-    #  the SDK retry, and why is retrying 429 fine here? How long may one call hang by default?
+    # TODO М1.1: pass max_retries=... and timeout=... Which errors does the SDK retry,
+    #  and why is retrying 429 fine here? How long may one call hang by default?
     return CourseClaude(model=model_name(agent_name))
 
 

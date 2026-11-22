@@ -19,7 +19,7 @@
 ### 1. Модель и повторы — `assistant/shared/config.py`
 
 - `model_name(agent)`: `AGENT_MODEL_<AGENT>` → `AGENT_MODEL` → `DEFAULT_MODEL`. Так можно дать дорогую модель одному агенту, не трогая остальных.
-- `get_llm(agent)`: `CourseClaude` со своим клиентом `AsyncAnthropic(max_retries=..., timeout=...)`. Временные сбои и 429 SDK повторяет сам, выдерживая паузу из `retry-after`. Ваша часть — ограничить число повторов и время одного вызова: по умолчанию SDK ждёт ответа до 10 минут.
+- `get_llm(agent)`: `CourseClaude` с `max_retries` и `timeout`. Временные сбои и 429 SDK повторяет сам, выдерживая паузу из `retry-after`. Ваша часть — ограничить число повторов и время одного вызова: по умолчанию SDK ждёт ответа до 10 минут.
 
 Тесты: `tests/unit/test_m01_config.py`.
 
