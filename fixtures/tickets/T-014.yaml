@@ -1,0 +1,17 @@
+id: T-014
+created: "2026-09-22 08:40"
+channel: email
+author: "Вера Н."
+title: "Не могу войти в аккаунт"
+body: |
+  Пытаюсь войти — вместо формы входа страница с ошибкой 503. Пароль точно правильный,
+  вчера всё работало.
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: duplicate
+  duplicate_of: T-011
+  component: availability
+  docs: [availability.md]
+  reproduce: "DB_DOWN=1"
+  note: "Выглядит как проблема входа, но это тот же инцидент."

@@ -1,0 +1,15 @@
+id: T-012
+created: "2026-09-22 08:15"
+channel: чат
+author: "Алёна"
+title: "ничего не грузится"
+body: |
+  ошибка 503 везде, и каталог и корзина. у вас что-то упало?
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: duplicate
+  duplicate_of: T-011
+  component: availability
+  docs: [availability.md]
+  reproduce: "DB_DOWN=1"

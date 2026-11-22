@@ -1,0 +1,16 @@
+id: T-027
+created: "2026-10-19 11:05"
+channel: email
+author: "Борис Г."
+title: "Итог на оформлении не сходится"
+body: |
+  На странице оформления: товары 6 490 ₽, промокод SAVE10. В корзине была скидка 649 ₽,
+  а на оформлении «Итого 6 490 ₽». Где моя скидка?
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: duplicate
+  duplicate_of: T-004
+  component: cart
+  docs: [cart.md, checkout.md]
+  reproduce: "BUG_CART_TOTAL=1; SSD 1 ТБ + SAVE10"

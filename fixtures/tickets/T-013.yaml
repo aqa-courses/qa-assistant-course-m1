@@ -1,0 +1,18 @@
+id: T-013
+created: "2026-09-22 08:31"
+channel: API-партнёр
+author: "Integration team"
+title: "Cart total ignores promo discount"
+body: |
+  Hi! Our integration calls GET /api/cart after POST /api/cart/promo {"code": "SAVE10"}.
+  Response: "subtotal": 2490.0, "discount": 249.0, "shipping": 299.0, "total": 2789.0.
+  Expected total 2540.0 according to your docs. Started a couple of weeks ago.
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: duplicate
+  duplicate_of: T-004
+  component: cart
+  docs: [cart.md, api.md]
+  reproduce: "BUG_CART_TOTAL=1; API"
+  note: "Дубль на английском и через API."

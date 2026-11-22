@@ -1,0 +1,15 @@
+id: T-024
+created: "2026-10-14 18:20"
+channel: чат
+author: "Дарья"
+title: "WELCOME500 не даёт скидку"
+body: |
+  Ввела WELCOME500, код принят, «Действует: WELCOME500», а скидка 0 ₽. В корзине только хаб.
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: works_as_designed
+  component: promo
+  docs: [promo-welcome500.md]
+  quote: "В корзине только хаб"
+  note: "Хаб 2 490 ₽ меньше порога 3 000 ₽."

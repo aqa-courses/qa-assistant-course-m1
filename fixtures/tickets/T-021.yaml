@@ -1,0 +1,16 @@
+id: T-021
+created: "2026-10-09 09:58"
+channel: чат
+author: "Олег"
+title: "Поиск зависает"
+body: |
+  Набираю в поиске «ssd», жму «Найти» — страница крутится, потом всё-таки открывается.
+  Повторяю — открывается сразу. Интернет нормальный.
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: duplicate
+  duplicate_of: T-016
+  component: search
+  docs: [search.md]
+  reproduce: "FLAKY_SEARCH=0.5"

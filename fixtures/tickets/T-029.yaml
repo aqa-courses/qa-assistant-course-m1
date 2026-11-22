@@ -1,0 +1,15 @@
+id: T-029
+created: "2026-10-21 09:09"
+channel: чат
+author: "Глеб"
+title: "Поиск монитора тормозит"
+body: |
+  По запросу «монитор» страница грузится долго, браузер крутит колесо. Остальные страницы летают.
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: duplicate
+  duplicate_of: T-016
+  component: search
+  docs: [search.md]
+  reproduce: "FLAKY_SEARCH=0.5"

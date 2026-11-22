@@ -1,0 +1,13 @@
+id: T-032
+created: "2026-10-27 17:17"
+channel: чат
+author: "Руслан"
+title: "Оплата картой"
+body: |
+  Почему нельзя оплатить картой на сайте? Только при получении неудобно.
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: feature_request
+  component: checkout
+  docs: [checkout.md, roadmap.md]

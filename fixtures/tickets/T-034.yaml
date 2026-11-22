@@ -1,0 +1,13 @@
+id: T-034
+created: "2026-10-30 19:44"
+channel: чат
+author: "Фёдор"
+title: "Сортировка по популярности"
+body: |
+  Добавьте сортировку по популярности и рейтингу, по цене неудобно выбирать.
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: feature_request
+  component: catalog
+  docs: [filters-and-sorting.md]

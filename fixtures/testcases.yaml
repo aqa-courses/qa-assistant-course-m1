@@ -1,0 +1,279 @@
+# Тест-кейсы Shoplite. Сид для testcases_agent (SQLite) и playwright_agent.
+# automated: true — есть автотест с тегом @id:<id> в файле test.
+# Кейсы с automated: false — материал для генерации автотестов в модуле 4.
+
+- id: 1
+  title: Покупатель входит и попадает в каталог
+  area: login
+  priority: high
+  steps:
+    - Открыть /login
+    - Ввести alice@example.com / password123, нажать «Войти»
+  expected: Открыт каталог, в шапке имя «Алиса»
+  automated: true
+  test: autotests/tests/auth.spec.ts
+
+- id: 2
+  title: Неверный пароль — ошибка внутри формы
+  area: login
+  priority: high
+  steps:
+    - Открыть /login
+    - Ввести alice@example.com и неверный пароль, нажать «Войти»
+  expected: В форме «Неверный email или пароль», остаёмся на /login
+  automated: true
+  test: autotests/tests/auth.spec.ts
+
+- id: 3
+  title: Заблокированный пользователь не может войти
+  area: login
+  priority: medium
+  steps:
+    - Войти как locked@example.com / password123
+  expected: В форме сообщение о блокировке учётной записи
+  automated: true
+  test: autotests/tests/auth.spec.ts
+
+- id: 4
+  title: Поиск по названию не зависит от регистра
+  area: search
+  priority: high
+  steps:
+    - Войти как alice, открыть каталог
+    - Найти «МОНИТОР»
+  expected: 'Найдены «Монитор 27"» и «Монитор 24"», «Найдено товаров: 2»'
+  automated: true
+  test: autotests/tests/catalog.spec.ts
+
+- id: 5
+  title: Поиск из одной буквы не фильтрует и подсказывает
+  area: search
+  priority: low
+  steps:
+    - Найти «м»
+  expected: Показаны все 12 товаров и подсказка про 2 символа
+  automated: true
+  test: autotests/tests/catalog.spec.ts
+
+- id: 6
+  title: Фильтр по категории и сортировка по цене
+  area: catalog
+  priority: medium
+  steps:
+    - Выбрать категорию «Мониторы», сортировку «Сначала дешёвые», нажать «Найти»
+  expected: 'Порядок: «Монитор 24"», «Монитор 27"»'
+  automated: true
+  test: autotests/tests/catalog.spec.ts
+
+- id: 7
+  title: Товар без остатка нельзя положить в корзину
+  area: catalog
+  priority: medium
+  steps:
+    - 'Найти в каталоге «Монитор 24"»'
+  expected: Вместо «В корзину» неактивная кнопка «Нет в наличии»
+  automated: true
+  test: autotests/tests/catalog.spec.ts
+
+- id: 8
+  title: Товар из каталога попадает в корзину
+  area: cart
+  priority: high
+  steps:
+    - Нажать «В корзину» у «USB-C хаб»
+    - Открыть корзину
+  expected: Счётчик в шапке «1», в корзине одна строка «USB-C хаб»
+  automated: true
+  test: autotests/tests/cart.spec.ts
+
+- id: 9
+  title: Не больше 5 штук одного товара
+  area: cart
+  priority: medium
+  preconditions: В корзине 5 × «USB-C хаб»
+  steps:
+    - Нажать «В корзину» у «USB-C хаб» в каталоге
+  expected: Сообщение «не больше 5 шт.», в корзине по-прежнему 5
+  automated: true
+  test: autotests/tests/cart.spec.ts
+
+- id: 10
+  title: SAVE10 уменьшает итог на 10%
+  area: promo
+  priority: high
+  preconditions: В корзине «USB-C хаб» (2 490 ₽)
+  steps:
+    - Применить SAVE10
+  expected: Товары 2 490 ₽, скидка −249 ₽, доставка 299 ₽, итого 2 540 ₽
+  automated: true
+  test: autotests/tests/cart.spec.ts
+
+- id: 11
+  title: SAVE10 не действует на товары со скидкой
+  area: promo
+  priority: medium
+  preconditions: В корзине только «Беспроводная мышь» (со скидкой)
+  steps:
+    - Применить SAVE10
+  expected: Скидка 0 ₽ и пояснение «SAVE10 не действует на товары со скидкой»
+  automated: true
+  test: autotests/tests/cart.spec.ts
+
+- id: 12
+  title: Доставка бесплатная от 5 000 ₽
+  area: shipping
+  priority: medium
+  preconditions: В корзине «Механическая клавиатура» (6 990 ₽)
+  steps:
+    - Открыть корзину
+  expected: Доставка «бесплатно», итого 6 990 ₽, подсказки о бесплатной доставке нет
+  automated: true
+  test: autotests/tests/cart.spec.ts
+
+- id: 13
+  title: Заказ оформляется и появляется в профиле
+  area: checkout
+  priority: high
+  preconditions: В корзине «Коврик для мыши XL»
+  steps:
+    - Нажать «Оформить заказ», ввести полный адрес, подтвердить
+    - Открыть профиль
+  expected: Страница «Заказ №N оформлен», заказ №N в профиле, корзина пуста
+  automated: true
+  test: autotests/tests/checkout.spec.ts
+
+- id: 14
+  title: Короткий адрес не принимается
+  area: checkout
+  priority: medium
+  preconditions: В корзине «Коврик для мыши XL»
+  steps:
+    - На оформлении ввести «Москва» и подтвердить
+  expected: Ошибка про адрес, введённый адрес сохранён в поле
+  automated: true
+  test: autotests/tests/checkout.spec.ts
+
+- id: 15
+  title: Ограниченная учётная запись не может оформить заказ
+  area: checkout
+  priority: high
+  preconditions: Вход как restricted@example.com, в корзине «Коврик для мыши XL»
+  steps:
+    - Оформить заказ с полным адресом
+  expected: Ошибка «…недоступно…», в профиле «Заказов пока нет.»
+  automated: true
+  test: autotests/tests/checkout.spec.ts
+
+# ---- not automated yet ---------------------------------------------------
+
+- id: 16
+  title: Выход завершает сессию
+  area: login
+  priority: medium
+  steps:
+    - Войти как alice, нажать «Выйти»
+    - Открыть /cart
+  expected: Перенаправление на /login?next=/cart
+  automated: false
+
+- id: 17
+  title: WELCOME500 применяется только от 3 000 ₽
+  area: promo
+  priority: high
+  preconditions: В корзине «USB-C хаб» (2 490 ₽)
+  steps:
+    - Применить WELCOME500
+    - Увеличить количество хабов до 2
+  expected: Сначала скидка 0 ₽ и пояснение «от 3 000 ₽», после увеличения скидка −500 ₽ без повторного ввода
+  automated: false
+
+- id: 18
+  title: Новый промокод заменяет предыдущий
+  area: promo
+  priority: medium
+  preconditions: В корзине 2 × «USB-C хаб», применён WELCOME500
+  steps:
+    - Применить SAVE10
+  expected: '«Действует: SAVE10», скидка −498 ₽, скидки не суммируются'
+  automated: false
+
+- id: 19
+  title: Неизвестный промокод не меняет действующий
+  area: promo
+  priority: low
+  preconditions: Применён SAVE10
+  steps:
+    - Применить FREE
+  expected: 'Ошибка «Промокод не найден», по-прежнему «Действует: SAVE10»'
+  automated: false
+
+- id: 20
+  title: Доставка становится платной, если скидка опускает сумму ниже порога
+  area: shipping
+  priority: medium
+  preconditions: В корзине «USB-C хаб» и «Колонки для ПК» (5 480 ₽)
+  steps:
+    - Применить WELCOME500
+  expected: Скидка −500 ₽, доставка 299 ₽, итого 5 279 ₽
+  automated: false
+
+- id: 21
+  title: Поиск и фильтры сохраняются после добавления в корзину
+  area: catalog
+  priority: medium
+  steps:
+    - Найти «мышь»
+    - Нажать «В корзину» у «Беспроводная мышь»
+  expected: Остаёмся в выдаче по «мышь», в поле поиска «мышь», сообщение «Товар добавлен в корзину»
+  automated: false
+
+- id: 22
+  title: Оформление останавливается, если на складе меньше, чем в корзине
+  area: checkout
+  priority: medium
+  preconditions: У alice в корзине 4 × «Монитор 27"» (остаток 4); bob купил 1 «Монитор 27"»
+  steps:
+    - alice оформляет заказ
+  expected: 'Ошибка «"Монитор 27"»: на складе осталось 3 шт.», заказ не создан'
+  automated: false
+
+- id: 23
+  title: Счётчик корзины считает штуки
+  area: cart
+  priority: low
+  preconditions: В корзине 2 × «USB-C хаб» и 1 × «Беспроводная мышь»
+  steps:
+    - Посмотреть на счётчик в шапке
+  expected: «3»
+  automated: false
+
+- id: 24
+  title: Фильтр по цене включает границы
+  area: catalog
+  priority: low
+  steps:
+    - Указать цену «до 990», нажать «Найти»
+  expected: Найден «Коврик для мыши XL» (990 ₽)
+  automated: false
+
+- id: 25
+  title: Товар добавляется в избранное и убирается из него
+  area: wishlist
+  priority: medium
+  preconditions: Избранное включено
+  steps:
+    - На карточке «SSD 1 ТБ» нажать «☆ В избранное»
+    - Открыть «Избранное»
+    - Вернуться на карточку и нажать «★ В избранном»
+  expected: Товар появляется в /wishlist, после второго нажатия исчезает
+  automated: false
+
+- id: 26
+  title: Пустое избранное
+  area: wishlist
+  priority: low
+  preconditions: Избранное включено, в нём ничего нет
+  steps:
+    - Открыть «Избранное»
+  expected: Сообщение о пустом избранном
+  automated: false

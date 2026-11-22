@@ -1,0 +1,16 @@
+id: T-035
+created: "2026-11-02 08:55"
+channel: email
+author: "Тамара"
+title: "Забыла пароль"
+body: |
+  Не помню пароль, как его восстановить? На сайте не нашла, где это сделать.
+
+# Эталонная разметка для офлайн-eval. Агенту триажа она не передаётся.
+expected:
+  verdict: duplicate
+  duplicate_of: T-025
+  component: login
+  docs: [login.md, roadmap.md]
+  acceptable: [feature_request]
+  note: "Дубль пожелания, а не бага."
