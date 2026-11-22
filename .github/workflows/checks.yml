@@ -19,6 +19,18 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: pytest -q
 
+  assistant:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -e ".[dev]"
+      # Hermetic: ScriptedLlm instead of Gemini, a fake GitHub API. No keys, no tokens spent.
+      - run: pytest -q tests/unit
+
   fixtures:
     runs-on: ubuntu-latest
     steps:

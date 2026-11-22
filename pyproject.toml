@@ -1,0 +1,27 @@
+[project]
+name = "qa-assistant"
+version = "0.1.0"
+description = "QA assistant on Google ADK: the course's reference implementation"
+requires-python = ">=3.11"
+dependencies = [
+    "google-adk==2.15.0",
+    "httpx>=0.28,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9,<10",
+    "pytest-asyncio>=1,<2",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["assistant*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
