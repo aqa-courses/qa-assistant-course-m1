@@ -38,7 +38,7 @@ class CourseClaude(AnthropicLlm):
     """Claude through the Anthropic API (ANTHROPIC_API_KEY), always with adaptive thinking.
 
     A bare "claude-..." string in `Agent(model=...)` would resolve to ADK's `Claude`,
-    which goes through Vertex AI. The course uses the Anthropic API directly.
+    which goes through Google Cloud (Agent Platform in the ADK docs). The course uses the Anthropic API directly.
     """
 
     max_retries: int = 2      # the Anthropic SDK defaults
