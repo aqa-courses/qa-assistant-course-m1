@@ -1,6 +1,10 @@
 """M1: the model name picks the provider; what differs between providers is evened out in one place."""
 
+import json
+
+import httpx
 import pytest
+from google.adk.agents import Agent
 from google.adk.models.anthropic_llm import AnthropicLlm
 from google.adk.models.google_llm import Gemini
 from google.adk.models.llm_request import LlmRequest
@@ -9,6 +13,7 @@ from google.genai import types
 from pydantic import BaseModel
 
 from assistant.shared import config, providers
+from tests.helpers.runner import run_agent
 
 
 class Verdict(BaseModel):
@@ -115,3 +120,56 @@ def test_a_429_is_recognised_whoever_sent_it():
     assert not providers.is_rate_limit(openai.AuthenticationError(
         "bad key", response=httpx.Response(401, request=request), body=None))
     assert not providers.is_rate_limit(TimeoutError())
+
+
+# ---- through a fake server: what actually goes over the wire -----------------
+
+def _server(*replies: dict):
+    """An OpenAI-compatible server that answers from a script and keeps the request bodies."""
+    script, bodies = list(replies), []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        bodies.append(json.loads(request.content))
+        message = script.pop(0)
+        usage = message.pop("usage", {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15})
+        return httpx.Response(200, json={
+            "id": "1", "object": "chat.completion", "created": 0, "model": "m", "usage": usage,
+            "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", **message}}]})
+
+    from openai import AsyncOpenAI
+    client = AsyncOpenAI(api_key="test", base_url="https://llm.example.test/v1",
+                         http_client=httpx.AsyncClient(transport=httpx.MockTransport(handle)))
+    return providers.CourseOpenAI(model="m", client=client), bodies
+
+
+def runs_today(branch: str = "") -> dict:
+    """Lists today's CI runs.
+
+    Args:
+        branch: Only runs on this branch. Empty string means any branch.
+    """
+    return {"runs": [{"id": 1002, "conclusion": "failure"}]}
+
+
+async def test_a_tool_call_makes_the_round_trip_through_an_openai_compatible_server():
+    llm, bodies = _server(
+        {"content": None, "tool_calls": [{"id": "call_1", "type": "function", "function": {
+            "name": "runs_today", "arguments": '{"branch": "main"}'}}]},
+        {"content": "Прогон 1002 упал."})
+    agent = Agent(name="ci", model=llm, instruction="Answer about CI runs.", tools=[runs_today])
+    result = await run_agent(agent, "Что с прогонами?")
+    assert result.text == "Прогон 1002 упал."
+    declared = bodies[0]["tools"][0]["function"]
+    assert declared["name"] == "runs_today" and "branch" in declared["parameters"]["properties"]
+    tool_message = bodies[1]["messages"][-1]
+    assert tool_message["role"] == "tool" and "1002" in tool_message["content"], "the model must see the tool result"
+
+
+async def test_a_schema_agent_asks_for_json_mode_and_carries_the_schema_in_the_prompt():
+    llm, bodies = _server({"content": '{"category": "ui_change", "confidence": 0.9}'})
+    agent = Agent(name="judge", model=llm, instruction="Classify the failure.", output_schema=Verdict)
+    result = await run_agent(agent, "locator not found after redesign")
+    assert Verdict.model_validate_json(result.text).category == "ui_change"
+    assert bodies[0]["response_format"] == {"type": "json_object"}, "not json_schema: DeepSeek rejects it"
+    system = bodies[0]["messages"][0]
+    assert system["role"] == "system" and '"confidence"' in system["content"]
