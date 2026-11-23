@@ -26,7 +26,7 @@ TOKENS_TOTAL = "usage:total_tokens"
 MODEL_CALLS = "usage:model_calls"
 
 DEFAULT_MAX_TOOL_RESPONSE_CHARS = 20_000
-DEFAULT_SESSION_TOKEN_BUDGET = 1_000_000
+DEFAULT_SESSION_TOKEN_BUDGET = 1_500_000
 
 
 def _short(value: Any, limit: int = 200) -> str:
