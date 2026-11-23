@@ -96,6 +96,8 @@ class CourseOpenAI(OpenAILlm):
     @cached_property
     def _openai_client(self) -> AsyncOpenAI:
         # Built on the first real call, as in CourseClaude: a live client cannot be deep-copied.
+        if self.client is not None:
+            return self.client
         # A server without keys still needs a non-empty string: the SDK refuses to start without one.
         key = os.getenv(self.key_env, "").strip() if self.key_env else "none"
         return AsyncOpenAI(api_key=key or "missing", base_url=self.base_url,
