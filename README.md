@@ -56,7 +56,21 @@ docker build -t shoplite shoplite && docker run --rm -p 8000:8000 shoplite   # �
 adk web --port 8080 assistant/agents                                          # чат с агентами на :8080
 ```
 
-Агентам нужен ваш форк этого репозитория на GitHub: они читают его прогоны Actions и файлы.
+### Форк и токен GitHub
+
+Агенты работают с вашим форком: читают его прогоны Actions и файлы, с модуля 2 заводят задачи, с модуля 4 открывают pull request'ы. Три настройки форка по умолчанию мешают курсу:
+
+1. При создании форка снимите галочку «Copy the … branch only». Иначе в форк попадёт одна ветка из всех.
+2. На вкладке Actions нажмите «I understand my workflows, go ahead and enable them». Без этого e2e не запустится, и агенту нечего будет разбирать.
+3. Settings → General → Features: включите Issues. С ними работает `issues_agent` из модуля 2.
+
+Токен — fine-grained (Settings → Developer settings → Fine-grained tokens), с доступом только к форку. Права растут по модулям, можно сразу выдать их на весь курс:
+
+| Модули | Права токена |
+|---|---|
+| 1 | Actions: read, Contents: read |
+| 2–3 | плюс Issues: read and write |
+| 4–8 | плюс Contents: read and write, Pull requests: read and write |
 
 ## Сколько стоит модель
 
