@@ -17,7 +17,7 @@ def test_model_falls_back_from_agent_to_global_to_default(monkeypatch):
 
 def test_get_llm_goes_to_the_anthropic_api_with_retries_and_a_finite_timeout():
     llm = config.get_llm("github_agent")
-    assert isinstance(llm, AnthropicLlm), "a bare 'claude-...' string would go through Vertex AI"
+    assert isinstance(llm, AnthropicLlm), "a bare 'claude-...' string would go through Google Cloud"
     assert llm.max_retries >= 2
     assert llm.timeout <= 300, "the SDK default is 10 minutes per call"
     client = llm._anthropic_client
