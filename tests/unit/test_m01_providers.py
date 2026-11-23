@@ -41,6 +41,13 @@ def test_an_unknown_model_fails_with_the_list_of_what_is_accepted():
     assert "deepseek/" in str(error.value) and "ollama/" in str(error.value)
 
 
+def test_each_model_names_the_key_it_needs():
+    assert providers.key_env("claude-haiku-5-5") == "ANTHROPIC_API_KEY"
+    assert providers.key_env("gemini-3.5-flash-lite") == "GOOGLE_API_KEY"
+    assert providers.key_env("deepseek/deepseek-flash") == "DEEPSEEK_API_KEY"
+    assert providers.key_env("ollama/qwen3:4b") == "", "a local server has no key"
+
+
 def test_agents_may_sit_on_different_providers(monkeypatch):
     monkeypatch.setenv("AGENT_MODEL", "ollama/qwen3:4b")
     monkeypatch.setenv("AGENT_MODEL_ROOT", "gemini-3.5-flash-lite")

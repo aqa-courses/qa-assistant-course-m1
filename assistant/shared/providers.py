@@ -109,18 +109,32 @@ class CourseOpenAI(OpenAILlm):
             yield with_disjoint_usage(response)
 
 
-def build(model: str, **client: Any) -> BaseLlm:
-    """The model object for a non-Claude model name. `client` is max_retries and timeout, if given."""
-    if model.startswith("gemini-"):
-        return _gemini(model, **client)
+def _openai_compatible(model: str) -> tuple[str, Provider, str]:
     prefix, _, name = model.partition("/")
     provider = OPENAI_COMPATIBLE.get(prefix)
     if provider is None or not name:
         raise UnknownModelError(
             f"Не знаю, чья это модель: {model!r}. Подходят claude-..., gemini-... и "
             + ", ".join(f"{p}/<модель>" for p in OPENAI_COMPATIBLE) + ".")
+    return prefix, provider, name
+
+
+def build(model: str, **client: Any) -> BaseLlm:
+    """The model object for a non-Claude model name. `client` is max_retries and timeout, if given."""
+    if model.startswith("gemini-"):
+        return _gemini(model, **client)
+    prefix, provider, name = _openai_compatible(model)
     base_url = os.getenv(f"{prefix.upper()}_BASE_URL", "").strip() or provider.base_url
     return CourseOpenAI(model=name, base_url=base_url, key_env=provider.key_env, **client)
+
+
+def key_env(model: str) -> str:
+    """The variable that holds the key of this model's provider; "" if the provider needs none."""
+    if model.startswith("claude-"):
+        return "ANTHROPIC_API_KEY"
+    if model.startswith("gemini-"):
+        return "GOOGLE_API_KEY"
+    return _openai_compatible(model)[1].key_env
 
 
 def _gemini(model: str, max_retries: int | None = None, timeout: float | None = None) -> Gemini:
