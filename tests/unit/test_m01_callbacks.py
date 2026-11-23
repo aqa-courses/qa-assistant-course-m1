@@ -1,5 +1,7 @@
 """M1: callbacks count tokens, stop at the budget, truncate huge results, turn tool crashes into errors."""
 
+from google.genai import types
+
 from assistant.agents.github_agent import tools
 from assistant.agents.github_agent.agent import root_agent
 from assistant.shared import observability as obs
@@ -20,6 +22,18 @@ async def test_tokens_are_counted_per_session(monkeypatch):
     assert result.text == "Упал прогон 1002"
     assert result.state[obs.TOKENS_TOTAL] == 140
     assert result.state[obs.MODEL_CALLS] == 2
+
+
+
+async def test_thinking_is_counted_as_output():
+    """Claude bills thinking as output tokens; ADK reports it apart from the visible answer."""
+    answer = text("Упал прогон 1002")
+    answer.usage_metadata = types.GenerateContentResponseUsageMetadata(
+        prompt_token_count=300, candidates_token_count=40, thoughts_token_count=60, total_token_count=400)
+    _, agent = scripted(answer)
+    result = await run_agent(agent, "Что с последним прогоном?")
+    assert result.state[obs.TOKENS_OUTPUT] == 100, "thinking is billed as output"
+    assert result.state[obs.TOKENS_PROMPT] + result.state[obs.TOKENS_OUTPUT] == result.state[obs.TOKENS_TOTAL]
 
 
 async def test_budget_stops_the_model_before_the_next_call(monkeypatch):

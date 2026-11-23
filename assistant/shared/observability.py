@@ -57,7 +57,11 @@ def tool_error_to_result(tool: BaseTool, args: dict[str, Any], tool_context: Too
 # ---- model ---------------------------------------------------------------
 
 def count_tokens(callback_context: CallbackContext, llm_response: LlmResponse) -> None:
-    """Add llm_response.usage_metadata to the session state: MODEL_CALLS, TOKENS_* keys."""
+    """Add llm_response.usage_metadata to the session state: MODEL_CALLS, TOKENS_* keys.
+
+    Output is what Anthropic bills as output: the answer (candidates_token_count)
+    plus thinking (thoughts_token_count), which ADK reports separately.
+    """
     # TODO М1.3
     return None
 
