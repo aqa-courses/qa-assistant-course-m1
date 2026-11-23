@@ -113,6 +113,7 @@ Sonnet мы не замеряли. По цене токена он в 20 раз 
 | `gemini-3.5-flash-lite` | Gemini API | `GOOGLE_API_KEY` |
 | `deepseek/deepseek-flash` | DeepSeek | `DEEPSEEK_API_KEY` |
 | `ollama/qwen3:4b` | Ollama на вашей машине | не нужен |
+| `ollama/deepseek-v4.1-flash` | Ollama Cloud: `OLLAMA_BASE_URL=https://ollama.com/v1` | `OLLAMA_API_KEY` |
 | `openai/<модель>` | любой сервер с OpenAI-совместимым API | `OPENAI_BASE_URL`, `OPENAI_API_KEY` |
 
 Имя задаётся и для отдельного агента: `AGENT_MODEL_<ИМЯ_АГЕНТА>`. Агенты могут работать у разных провайдеров одновременно.

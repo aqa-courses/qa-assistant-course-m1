@@ -48,6 +48,16 @@ def test_each_model_names_the_key_it_needs():
     assert providers.key_env("ollama/qwen3:4b") == "", "a local server has no key"
 
 
+def test_ollama_in_the_cloud_takes_a_key(monkeypatch):
+    """The same provider, another address: ollama.com serves hosted models and asks for a key."""
+    monkeypatch.setenv("OLLAMA_BASE_URL", "https://ollama.com/v1")
+    monkeypatch.setenv("OLLAMA_API_KEY", "ollama-test")
+    llm = config.build_llm("ollama/deepseek-v4.1-flash")
+    assert (llm.model, llm.base_url) == ("deepseek-v4.1-flash", "https://ollama.com/v1")
+    assert llm._openai_client.api_key == "ollama-test"
+    assert providers.key_env("ollama/deepseek-v4.1-flash") == "OLLAMA_API_KEY"
+
+
 def test_agents_may_sit_on_different_providers(monkeypatch):
     monkeypatch.setenv("AGENT_MODEL", "ollama/qwen3:4b")
     monkeypatch.setenv("AGENT_MODEL_ROOT", "gemini-3.5-flash-lite")
