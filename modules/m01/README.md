@@ -35,7 +35,7 @@
 ### 3. Колбэки — `assistant/shared/observability.py`
 
 - `log_tool_call` — лог каждого вызова инструмента;
-- `count_tokens` — токены сессии в `state` по `usage_metadata` ответа модели;
+- `count_tokens` — токены сессии в `state` по `usage_metadata` ответа модели. Размышления Claude оплачиваются как выход, но ADK кладёт их отдельно от ответа, в `thoughts_token_count`: в `usage:output_tokens` нужны оба;
 - `enforce_token_budget` — если сессия потратила `SESSION_TOKEN_BUDGET`, вернуть ответ вместо вызова модели;
 - `truncate_tool_response` — ответ инструмента больше `MAX_TOOL_RESPONSE_CHARS` заменить началом и пометкой. Один полный лог CI попадает в каждый следующий вызов модели в сессии;
 - `tool_error_to_result` — исключение в инструменте превратить в `{"error": ...}`.
