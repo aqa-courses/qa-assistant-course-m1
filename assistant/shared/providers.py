@@ -6,6 +6,7 @@ The course is measured on Claude (config.CourseClaude). The provider is chosen b
     AGENT_MODEL=gemini-3.5-flash-lite     Gemini API              GOOGLE_API_KEY
     AGENT_MODEL=deepseek/deepseek-flash   DeepSeek                DEEPSEEK_API_KEY
     AGENT_MODEL=ollama/qwen3:4b           a local Ollama          no key
+    AGENT_MODEL=ollama/deepseek-v4.1-flash  Ollama Cloud          OLLAMA_BASE_URL=https://ollama.com/v1, OLLAMA_API_KEY
     AGENT_MODEL=openai/<model>            any compatible server   OPENAI_BASE_URL, OPENAI_API_KEY
 
 Agents may sit on different providers: the name is resolved per agent (AGENT_MODEL_<AGENT>).
@@ -34,13 +35,14 @@ class Provider:
     """An OpenAI-compatible server: where it is and which variable holds its key."""
 
     base_url: str   # default; <PREFIX>_BASE_URL overrides it
-    key_env: str    # "" for a server without keys
+    key_env: str    # the variable with the key
+    key_optional: bool = False   # a local server takes no key; the same server in the cloud does
 
 
 # The prefix of the model name, before the first "/".
 OPENAI_COMPATIBLE: dict[str, Provider] = {
     "deepseek": Provider("https://api.deepseek.com", "DEEPSEEK_API_KEY"),
-    "ollama": Provider("http://localhost:11434/v1", ""),
+    "ollama": Provider("http://localhost:11434/v1", "OLLAMA_API_KEY", key_optional=True),
     "openai": Provider("https://api.openai.com/v1", "OPENAI_API_KEY"),
 }
 
@@ -99,7 +101,7 @@ class CourseOpenAI(OpenAILlm):
         if self.client is not None:
             return self.client
         # A server without keys still needs a non-empty string: the SDK refuses to start without one.
-        key = os.getenv(self.key_env, "").strip() if self.key_env else "none"
+        key = os.getenv(self.key_env, "").strip() if self.key_env else ""
         return AsyncOpenAI(api_key=key or "missing", base_url=self.base_url,
                            max_retries=self.max_retries, timeout=self.timeout)
 
@@ -129,12 +131,18 @@ def build(model: str, **client: Any) -> BaseLlm:
 
 
 def key_env(model: str) -> str:
-    """The variable that holds the key of this model's provider; "" if the provider needs none."""
+    """The variable that must hold the key of this model's provider; "" if it runs without one.
+
+    Ollama needs a key only in the cloud: without OLLAMA_API_KEY it is taken for a local server.
+    """
     if model.startswith("claude-"):
         return "ANTHROPIC_API_KEY"
     if model.startswith("gemini-"):
         return "GOOGLE_API_KEY"
-    return _openai_compatible(model)[1].key_env
+    provider = _openai_compatible(model)[1]
+    if provider.key_optional and not os.getenv(provider.key_env, "").strip():
+        return ""
+    return provider.key_env
 
 
 def _gemini(model: str, max_retries: int | None = None, timeout: float | None = None) -> Gemini:

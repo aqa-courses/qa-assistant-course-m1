@@ -5,7 +5,7 @@ _ENV = ["AGENT_MODEL", "AGENT_MODEL_GITHUB_AGENT", "SESSION_TOKEN_BUDGET", "MAX_
 
 # Other model providers (assistant/shared/providers.py): their keys and addresses.
 _MODEL_ENV = ["GOOGLE_API_KEY", "GEMINI_API_KEY", "DEEPSEEK_API_KEY", "OPENAI_API_KEY",
-              "DEEPSEEK_BASE_URL", "OLLAMA_BASE_URL", "OPENAI_BASE_URL"]
+              "DEEPSEEK_BASE_URL", "OLLAMA_BASE_URL", "OLLAMA_API_KEY", "OPENAI_BASE_URL"]
 
 
 @pytest.fixture(autouse=True)
