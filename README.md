@@ -56,7 +56,7 @@ adk web --port 8080 assistant/agents                                          # 
 |---|---|
 | 1 | Actions: read, Contents: read |
 | 2–3 | плюс Issues: read and write |
-| 4–8 | плюс Contents: read and write, Pull requests: read and write |
+| 4–9 | плюс Contents: read and write, Pull requests: read and write |
 
 ## Сколько стоит модель
 
