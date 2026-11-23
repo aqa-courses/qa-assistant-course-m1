@@ -1,5 +1,8 @@
 """M1: model per agent from the environment, retries in the SDK, adaptive thinking for schemas."""
 
+import warnings
+
+from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.models.anthropic_llm import AnthropicLlm
 from google.adk.models.llm_request import LlmRequest
 from google.genai import types
@@ -39,3 +42,11 @@ def test_an_agents_own_thinking_config_is_kept():
     own = types.ThinkingConfig(thinking_budget=0)
     request = LlmRequest(config=types.GenerateContentConfig(thinking_config=own))
     assert config.with_adaptive_thinking(request).config.thinking_config.thinking_budget == 0
+
+
+def test_requests_get_a_prompt_cache_unless_the_app_set_one():
+    assert config.with_prompt_cache(LlmRequest()).cache_config is config.PROMPT_CACHE
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # ContextCacheConfig is experimental in ADK 2.15
+        own = ContextCacheConfig(ttl_seconds=3600)
+    assert config.with_prompt_cache(LlmRequest(cache_config=own)).cache_config is own

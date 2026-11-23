@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import os
+import warnings
 from functools import cached_property
 from typing import AsyncGenerator
 
 from anthropic import AsyncAnthropic
+from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.models.anthropic_llm import AnthropicLlm
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
@@ -40,8 +42,29 @@ def with_adaptive_thinking(llm_request: LlmRequest) -> LlmRequest:
     return llm_request
 
 
+# Prompt caching. Every call re-sends the instruction, the tools and the whole conversation;
+# with a cache Anthropic reads the repeated start at a tenth of the price. Measured on Haiku
+# (module 1 lesson): a 5-question conversation with root, $0.025 → $0.012.
+# ContextCacheConfig is marked experimental in ADK 2.15 and warns on creation: once, here.
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    PROMPT_CACHE = ContextCacheConfig(min_tokens=1024, ttl_seconds=300, cache_intervals=100)
+
+
+def with_prompt_cache(llm_request: LlmRequest) -> LlmRequest:
+    """Cache the repeated start of the prompt unless the app configured caching itself.
+
+    The app-level way is App(context_cache_config=...). adk web builds one App per
+    agent folder, and the pipelines run their own Runners: per request, every agent
+    and every pipeline gets the cache, wherever it runs.
+    """
+    if llm_request.cache_config is None:
+        llm_request.cache_config = PROMPT_CACHE
+    return llm_request
+
+
 class CourseClaude(AnthropicLlm):
-    """Claude through the Anthropic API (ANTHROPIC_API_KEY), always with adaptive thinking.
+    """Claude through the Anthropic API (ANTHROPIC_API_KEY), with adaptive thinking and a prompt cache.
 
     A bare "claude-..." string in `Agent(model=...)` would resolve to ADK's `Claude`,
     which goes through Google Cloud (Agent Platform in the ADK docs). The course uses the Anthropic API directly.
@@ -58,7 +81,8 @@ class CourseClaude(AnthropicLlm):
 
     async def generate_content_async(self, llm_request: LlmRequest,
                                      stream: bool = False) -> AsyncGenerator[LlmResponse, None]:
-        async for response in super().generate_content_async(with_adaptive_thinking(llm_request), stream):
+        async for response in super().generate_content_async(
+                with_prompt_cache(with_adaptive_thinking(llm_request)), stream):
             yield response
 
 
