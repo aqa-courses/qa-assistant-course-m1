@@ -51,7 +51,7 @@ def read_env() -> dict[str, str]:
     for line in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
         key, sep, value = line.partition("=")
         if sep and not key.strip().startswith("#"):
-            env[key.strip()] = value.strip().strip('"').strip("'")
+            env[key.strip()] = value.split(" #")[0].strip().strip('"').strip("'")
     return {**env, **{k: v for k, v in os.environ.items() if v}}  # the shell wins, as for the app
 
 
