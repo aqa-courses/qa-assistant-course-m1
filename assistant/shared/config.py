@@ -10,6 +10,7 @@ from typing import AsyncGenerator
 from anthropic import AsyncAnthropic
 from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.models.anthropic_llm import AnthropicLlm
+from google.adk.models.base_llm import BaseLlm
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.genai import types
@@ -86,15 +87,27 @@ def model_name(agent_name: str) -> str:
     return DEFAULT_MODEL
 
 
-def get_llm(agent_name: str) -> CourseClaude:
-    """The model for one agent, with retries in the Anthropic SDK and a finite timeout.
+def build_llm(model: str, **client) -> BaseLlm:
+    """The model object for a model name. The name picks the provider.
+
+    claude-... is the course's reference and goes to CourseClaude. Everything else —
+    gemini-..., deepseek/..., ollama/..., openai/... — is built in providers.py.
+    """
+    if model.startswith("claude-"):
+        return CourseClaude(model=model, **client)
+    from assistant.shared import providers   # here, not at the top: Claude alone needs neither SDK
+    return providers.build(model, **client)
+
+
+def get_llm(agent_name: str) -> BaseLlm:
+    """The model for one agent, with retries in the provider's SDK and a finite timeout.
 
     Only the model call is retried. Tools are never re-run by this retry,
     so a tool with side effects cannot fire twice because of it.
     """
     # TODO М1.1: pass max_retries=... and timeout=... Which errors does the SDK retry,
     #  and why is retrying 429 fine here? How long may one call hang by default?
-    return CourseClaude(model=model_name(agent_name))
+    return build_llm(model_name(agent_name))
 
 
 def require_env(name: str, hint: str) -> str:
