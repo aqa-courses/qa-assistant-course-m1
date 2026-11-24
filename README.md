@@ -27,6 +27,10 @@ git switch -c m01 origin/m01-start
 git push -u origin m01            # пулл-реквест m01 → m01-start в вашем форке; автопроверка зелёная — Merge
 ```
 
+**Пулл-реквест — в свой форк, а не в этот репозиторий.** GitHub при создании PR из форка по умолчанию предлагает base repository — этот репозиторий. Смените base repository на свой форк, а base — на `m01-start`. Иначе ваш код и ответы окажутся в публичном PR у всех на виду. Из терминала: `gh pr create --repo <ваш логин>/<ваш форк> --base m01-start`.
+
+Нужен уверенный Python: `async`/`await`, декораторы, pytest. Модуль занимает несколько вечеров: урок, код с отладкой и живые проверки.
+
 ## Что дальше в полном курсе
 
 | Модуль | Что строите |
@@ -45,6 +49,8 @@ git push -u origin m01            # пулл-реквест m01 → m01-start в
 ## Подготовка
 
 Нужны Python 3.11+, Docker, Node.js 24 (для автотестов) и аккаунт GitHub.
+
+На Windows команды удобнее всего запускать в Git Bash: он ставится вместе с Git for Windows, и команды из README работают как есть. В PowerShell: `Copy-Item .env.example .env` вместо `cp`, `.venv\Scripts\Activate.ps1` для окружения, а переменную перед командой задают так: `$env:RUN_AGENT_EVALS = "1"; pytest tests/eval`.
 
 ### Форк и токен GitHub
 
@@ -74,9 +80,13 @@ cp .env.example .env              # ANTHROPIC_API_KEY, GITHUB_REPO, GITHUB_TOKEN
 python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
+python scripts/doctor.py           # проверка окружения, форка и токена
+
 docker build -t shoplite shoplite && docker run --rm -p 8000:8000 shoplite   # стенд на :8000
 adk web --port 8080 assistant/agents                                          # чат с агентами на :8080
 ```
+
+`scripts/doctor.py` ничего не меняет и не тратит токены. Он проверяет Python, Docker и Node.js, заполнен ли `.env`, принят ли ключ Claude, видит ли токен форк и включены ли в форке Actions и Issues. На каждую проблему — строка «НЕТ» и что сделать.
 
 ## Что внутри
 
