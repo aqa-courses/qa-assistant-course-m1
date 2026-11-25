@@ -68,6 +68,29 @@ git push -u origin m01            # пулл-реквест m01 → m01-start в
 | 2–3 | плюс Issues: read and write |
 | 4–9 | плюс Contents: read and write, Pull requests: read and write |
 
+### Если вы прошли модуль 1 в бесплатном репозитории
+
+Полный курс — отдельный репозиторий, и форк у него будет второй. Решать модуль 1 заново не нужно: перенесите свой код из первого форка.
+
+```bash
+# в клоне нового форка
+git remote add m1 https://github.com/<ваш логин>/<форк бесплатного модуля>.git
+git fetch m1
+git switch -c work origin/m01-start
+git checkout m1/m01 -- assistant      # m01 — ветка, в которой вы писали модуль 1
+git commit -m "Модуль 1 из бесплатного репозитория"
+pytest tests/unit                     # должен быть зелёным, как в первом форке
+git push -u origin work
+```
+
+Дальше — с модуля 2: `git merge origin/m02-start`, как в разделе «Ветки». Не хотите переносить — начните с эталона первого модуля: `git switch -c work origin/m01-solution`.
+
+Агенты должны смотреть в новый форк:
+
+- в `.env` замените `GITHUB_REPO` на `<ваш логин>/<новый форк>`;
+- токен привязан к репозиториям, которые вы выбрали при выпуске. Добавьте в него новый форк (Settings → Developer settings → Fine-grained tokens → ваш токен → Repository access) или выпустите новый. Со старым токеном агенты получат от GitHub 404;
+- права токена для модулей 2–9 — в таблице выше.
+
 ### Ключ Claude
 
 Ключ создаётся в консоли Claude: [platform.claude.com](https://platform.claude.com/settings/keys). API доступен не во всех странах — проверьте свою по [списку](https://www.anthropic.com/supported-countries) до пополнения баланса. Бесплатного уровня у API нет: пополните баланс на несколько долларов, на весь курс этого хватит с запасом (раздел «Сколько стоит модель»).
