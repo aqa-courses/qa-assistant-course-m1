@@ -57,7 +57,7 @@ git push -u origin m01            # пулл-реквест m01 → m01-start в
 Агенты работают с вашим форком: читают его прогоны Actions и файлы, с модуля 2 заводят задачи, с модуля 4 открывают pull request'ы. Три настройки форка по умолчанию мешают курсу:
 
 1. При создании форка снимите галочку «Copy the … branch only». Иначе в форк попадёт одна ветка из всех.
-2. На вкладке Actions нажмите «I understand my workflows, go ahead and enable them». Без этого e2e не запустится, и агенту нечего будет разбирать.
+2. На вкладке Actions нажмите «I understand my workflows, go ahead and enable them». Без этого e2e не запустится, и агенту нечего будет разбирать. Автопроверка пулл-реквеста тоже не запустится, причём без ошибки. Открыли пулл-реквест раньше, чем включили Actions, — закройте его и откройте снова (Close pull request, затем Reopen).
 3. Settings → General → Features: включите Issues. С ними работает `issues_agent` из модуля 2.
 
 Токен — fine-grained (Settings → Developer settings → Fine-grained tokens), с доступом только к форку. Права растут по модулям, можно сразу выдать их на весь курс:
