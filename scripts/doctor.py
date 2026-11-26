@@ -64,7 +64,7 @@ def get(url: str, headers: dict[str, str]) -> tuple[int, dict | list | None]:
         return error.code, None
     except ssl.SSLError as error:
         raise SystemExit(f"  НЕТ   Python не может открыть HTTPS ({error}). "
-                         "Обычно это корпоративный прокси или сертификат в системе; спросите администратора.")
+                         "Обычно это корпоративный прокси или сертификат в системе: README, «Окружение».")
     except urllib.error.URLError as error:
         return 0, {"reason": str(error.reason)}
 
