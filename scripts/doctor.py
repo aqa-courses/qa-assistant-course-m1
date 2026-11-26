@@ -218,6 +218,8 @@ def check_github(env: dict[str, str]) -> None:
 
 
 def main() -> None:
+    # Git Bash on a Windows that is not in UTF-8 mode gives Python an ANSI stdout: Cyrillic would crash.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     check_tools()
     if not (ROOT / ".env").exists():
         print("Настройки")
