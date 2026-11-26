@@ -80,13 +80,15 @@ git push -u origin m01            # пулл-реквест m01 → m01-start в
 git clone https://github.com/<ваш логин>/<ваш форк>.git && cd <ваш форк>
 cp .env.example .env              # ANTHROPIC_API_KEY, GITHUB_REPO, GITHUB_TOKEN
 python -m venv .venv && . .venv/bin/activate   # Git Bash на Windows: . .venv/Scripts/activate
-pip install -e ".[dev]"
+pip install -e ".[dev]" -c constraints.txt   # проверенные версии библиотек
 
 python scripts/doctor.py           # проверка окружения, форка и токена
 
 docker build -t shoplite shoplite && docker run --rm -p 8000:8000 shoplite   # стенд на :8000, занимает терминал
 adk web --port 8080 assistant/agents                                          # во втором терминале: чат с агентами на :8080
 ```
+
+`-c constraints.txt` ставит ровно те версии библиотек, на которых курс проверен. `pyproject.toml` задаёт диапазоны, и без этого файла два студента в разные дни получили бы разные версии ADK и Anthropic SDK, а с ними и разное поведение.
 
 В модуле 1 стенд локально не нужен: агент читает прогоны Actions в форке, а там стенд поднимает сам workflow. Домашнее задание запускает всё приложение через `uvicorn --env-file .env assistant.app:app --port 8080`: флаг `--env-file .env` нужен, потому что `adk web` читает `.env` сам, а приложение под uvicorn его не читает.
 
