@@ -160,7 +160,7 @@ def check_model(env: dict[str, str]) -> None:
     elif status == 401:
         fail("ключ Claude не принят: скопируйте его заново из консоли Claude")
     elif status == 403:
-        fail("ключ Claude отклонён (403): проверьте страну по списку из README и баланс")
+        fail("ключ Claude отклонён (403): API недоступен из вашей страны, список стран — в README")
     else:
         warn(f"api.anthropic.com не ответил как обычно (код {status}): нет сети?")
 

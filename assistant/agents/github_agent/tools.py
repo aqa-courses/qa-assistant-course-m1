@@ -132,7 +132,8 @@ def get_failed_job_logs(run_id: int, tail_lines: int = 150) -> dict[str, Any]:
     # TODO М1.2: GET /repos/{repo}/actions/runs/{run_id}/jobs?filter=latest, keep jobs with
     #  conclusion "failure"; for each, GET /repos/{repo}/actions/jobs/{id}/logs
     #  (accept="application/vnd.github.raw"). Clean the log with _clean_log,
-    #  collect the _ERROR lines, cut the tail with _log_tail.
+    #  collect the _ERROR lines, cut the tail with _log_tail. "failed_steps" are the names
+    #  of the job's steps with conclusion "failure" (the jobs response lists them in "steps").
     raise NotImplementedError("М1.2: get_failed_job_logs")
 
 
