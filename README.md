@@ -79,7 +79,7 @@ git push -u origin m01            # пулл-реквест m01 → m01-start в
 ```bash
 git clone https://github.com/<ваш логин>/<ваш форк>.git && cd <ваш форк>
 cp .env.example .env              # ANTHROPIC_API_KEY, GITHUB_REPO, GITHUB_TOKEN
-python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
+python -m venv .venv && . .venv/bin/activate   # Git Bash на Windows: . .venv/Scripts/activate
 pip install -e ".[dev]"
 
 python scripts/doctor.py           # проверка окружения, форка и токена
@@ -94,7 +94,7 @@ adk web --port 8080 assistant/agents                                          # 
 
 | Папка | Что это |
 |---|---|
-| [shoplite/](shoplite/) | учебный стенд: магазин на FastAPI с флагами поломок |
+| [shoplite/](shoplite/) | учебный стенд: магазин на FastAPI с [флагами поломок](shoplite/README.md#флаги-поломок) |
 | [autotests/](autotests/) | 15 e2e-тестов стенда на Playwright + TypeScript |
 | [docs/product/](docs/product/) | спецификации магазина, по ним работает триаж |
 | [fixtures/](fixtures/) | тест-кейсы и 40 тикетов поддержки с эталонной разметкой |
