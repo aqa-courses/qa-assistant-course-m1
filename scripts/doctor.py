@@ -85,7 +85,7 @@ def check_tools() -> None:
         warn("виртуальное окружение не активировано (README, «Окружение»)")
     missing = missing_packages()
     if missing:
-        fail(f'не установлены {", ".join(missing)}: pip install -e ".[dev]" (заготовка модуля могла добавить зависимости)')
+        fail(f'не установлены {", ".join(missing)}: pip install -e ".[dev]" -c constraints.txt (заготовка модуля могла добавить зависимости)')
     else:
         ok("все зависимости из pyproject.toml установлены")
     docker = run("docker", "version", "--format", "{{.Server.Version}}")
