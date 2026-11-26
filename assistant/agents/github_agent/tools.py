@@ -150,17 +150,18 @@ def get_failed_job_logs(run_id: int, tail_lines: int = 150) -> dict[str, Any]:
 
 
 @_errors_as_result
-def read_repo_file(path: str, ref: str = "main") -> dict[str, Any]:
+def read_repo_file(path: str, ref: str = "") -> dict[str, Any]:
     """Reads a text file from the repository.
 
     Args:
         path: Path from the repository root, e.g. "autotests/tests/cart.spec.ts".
-        ref: Branch, tag or commit sha. Defaults to "main".
+        ref: Branch, tag or commit sha. Empty: the repository's default branch.
 
     Returns:
         {"path", "ref", "content"}
     """
     path = path.strip().lstrip("/")
-    content = _github_get(f"/repos/{_repo()}/contents/{path}", {"ref": ref},
+    # No ref: GitHub reads the default branch. A fork may have no "main", or "main" may hold another module.
+    content = _github_get(f"/repos/{_repo()}/contents/{path}", {"ref": ref} if ref else None,
                           accept="application/vnd.github.raw+json").text
-    return {"path": path, "ref": ref, "content": content}
+    return {"path": path, "ref": ref or "ветка по умолчанию", "content": content}
