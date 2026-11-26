@@ -61,7 +61,7 @@ flowchart LR
 
 ### Как запустить у себя
 
-Сначала подготовьте окружение по README курса, раздел «Подготовка»: виртуальное окружение, `pip install -e ".[dev]"` и `.env` с `ANTHROPIC_API_KEY`, `GITHUB_REPO` и `GITHUB_TOKEN`. Команда `python scripts/doctor.py` проверит всё это и не потратит ни одного токена.
+Сначала подготовьте окружение по README курса, раздел «Подготовка»: виртуальное окружение, `pip install -e ".[dev]" -c constraints.txt` и `.env` с `ANTHROPIC_API_KEY`, `GITHUB_REPO` и `GITHUB_TOKEN`. Команда `python scripts/doctor.py` проверит всё это и не потратит ни одного токена.
 
 Дальше одна команда из корня репозитория, в активированном виртуальном окружении:
 
