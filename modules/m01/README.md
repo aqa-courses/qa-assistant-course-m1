@@ -10,6 +10,7 @@
 - `assistant/agents/github_agent/tools.py` — HTTP-вызов GitHub `_github_get` и готовый инструмент `list_workflow_runs` как образец.
 - `assistant/app.py` — FastAPI-приложение ADK с `/health`.
 - `assistant/shared/config.py` — `CourseClaude`: Claude через Anthropic API с адаптивными размышлениями. Зачем свой класс — в уроке.
+- `assistant/shared/providers.py` — другие модели вместо Claude: Gemini и серверы с API OpenAI (DeepSeek, Ollama). Провайдер выбирается по имени модели, готово, писать не нужно.
 - `tests/helpers/scripted_llm.py` — `ScriptedLlm`, модель по сценарию для тестов.
 
 ## Задания
@@ -21,7 +22,7 @@
 - `model_name(agent)`: `AGENT_MODEL_<AGENT>` → `AGENT_MODEL` → `DEFAULT_MODEL`. Так можно дать дорогую модель одному агенту, не трогая остальных.
 - `get_llm(agent)`: `CourseClaude` с `max_retries` и `timeout`. Временные сбои и 429 SDK повторяет сам, выдерживая паузу из `retry-after`. Ваша часть — ограничить число повторов и время одного вызова: по умолчанию SDK ждёт ответа до 10 минут.
 
-Тесты: `tests/unit/test_m01_config.py`.
+Тесты: `tests/unit/test_m01_config.py` и `tests/unit/test_m01_providers.py`. Провайдеры в `providers.py` уже готовы, но тест выбирает модель для агента через ваш `model_name`, поэтому до задания часть его проверок красная.
 
 ### 2. Инструменты GitHub — `assistant/agents/github_agent/tools.py`
 
@@ -47,15 +48,26 @@
 
 ADK вызывает инструмент-функцию `def` прямо в event loop. Пока инструмент ждёт GitHub, процесс не делает ничего другого: не отвечает другим пользователям и не отвечает на `/health`. Liveness-проба в Kubernetes ждёт ответа секунду, после трёх неудач контейнер перезапускают — вместе со всеми живыми сессиями.
 
-1. **Воспроизведите.** Запустите `pytest tests/unit/test_m01_blocking.py` и прочитайте, почему падает `test_health_answers_while_a_slow_tool_runs`. Потом вживую: `uvicorn assistant.app:app --port 8080`, в соседнем терминале опрашивайте `/health` раз в полсекунды и попросите агента в `/dev-ui` разобрать упавший прогон.
+1. **Воспроизведите.** Запустите `pytest tests/unit/test_m01_blocking.py` и прочитайте, почему падает `test_health_answers_while_a_slow_tool_runs`. Потом вживую: `uvicorn assistant.app:app --port 8080`, в соседнем терминале (Git Bash) опрашивайте `/health` раз в полсекунды:
+
+   ```bash
+   while true; do
+     curl -s -o /dev/null -m 1 -w "$(date +%T) %{http_code} %{time_total}s\n" http://localhost:8080/health
+     sleep 0.5
+   done
+   ```
+
+   Попросите агента в `/dev-ui` разобрать упавший прогон. Пока инструмент ждёт GitHub, ответы `/health` задерживаются, а код `000` значит, что ответа не было дольше секунды: настоящая проба засчитала бы неудачу. Остановить опрос — Ctrl+C. После исправления повторите и сравните. Чтобы снова увидеть зависание уже с исправленным кодом, временно уберите обёртку в `assistant/agents/github_agent/agent.py`: `tools=[list_workflow_runs, get_failed_job_logs, read_repo_file]` вместо `offload_blocking_tools([...])`, а после проверки верните.
 2. **Почините** `offload_blocking_tools`: синхронную функцию обернуть в `async def`, которая ждёт `asyncio.to_thread`. Через `functools.wraps`, иначе модель получит инструмент с другими параметрами — это тоже проверяется тестом.
-3. **Ответьте в PR:** в ADK 2.x есть встроенный `RunConfig(tool_thread_pool_config=...)`. Почему в этом проекте он не спасает `/health` в `adk web`, а обёртка спасает? (Подсказка: кто создаёт `RunConfig`, когда запрос приходит через `get_fast_api_app`.)
+3. **Ответьте в пулл-реквесте (PR):** в ADK 2.x есть встроенный `RunConfig(tool_thread_pool_config=...)`. Почему в этом проекте он не спасает `/health` в `adk web`, а обёртка спасает? (Подсказка: кто создаёт `RunConfig`, когда запрос приходит через `get_fast_api_app`.)
 
 Тесты: `tests/unit/test_m01_blocking.py`.
 
 ### 5. Агент загружается как в `adk web`
 
 `tests/unit/test_m01_loading.py` грузит агентов тем же загрузчиком, что `adk web`. Он импортирует папку агента как пакет верхнего уровня, поэтому общий код импортируется абсолютно: `from assistant.shared...`.
+
+Писать здесь ничего не нужно, если вы импортируете общий код абсолютно, как в заготовке. Тест — страховка: он покраснеет, если в агенте появится относительный импорт вроде `from ...shared`.
 
 ## Проверка
 
