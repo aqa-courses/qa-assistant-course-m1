@@ -100,11 +100,15 @@ def list_workflow_runs(workflow: str = "e2e.yml", branch: str = "", status: str 
 
 
 def _clean_log(raw: str) -> list[str]:
+    """The log as lines, without timestamps and terminal colors. Module 5 reuses it."""
     return _ANSI.sub("", _TIMESTAMP.sub("", raw)).splitlines()
 
 
 def _log_tail(lines: list[str], tail_lines: int) -> str:
-    """The lines before the last ##[error]: after it the runner only cleans up."""
+    """Up to tail_lines lines that end with the last ##[error]: after it the runner only cleans up.
+
+    Without any ##[error], the last tail_lines lines. Module 5 reuses it.
+    """
     errors = [i for i, line in enumerate(lines) if line.startswith(_ERROR)]
     end = errors[-1] + 1 if errors else len(lines)
     return "\n".join(lines[max(0, end - tail_lines):end])
