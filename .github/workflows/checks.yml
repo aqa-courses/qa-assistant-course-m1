@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev]" -c constraints.txt
       # Hermetic: ScriptedLlm instead of Claude, a fake GitHub API. No keys, no tokens spent.
       - run: pytest -q tests/unit
 
