@@ -1,6 +1,6 @@
 """HTTP entry point: the ADK API and dev UI plus /health.
 
-Run: uvicorn assistant.app:app --port 8080
+Run: uvicorn --env-file .env assistant.app:app --port 8080
 """
 
 from pathlib import Path
