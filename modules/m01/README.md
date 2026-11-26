@@ -57,6 +57,12 @@ ADK вызывает инструмент-функцию `def` прямо в eve
    done
    ```
 
+   То же в PowerShell (вместо кода `000` он пишет «нет ответа»):
+
+   ```powershell
+   while ($true) { $s = Get-Date; try { $c = (Invoke-WebRequest http://localhost:8080/health -TimeoutSec 1 -UseBasicParsing).StatusCode } catch { $c = 'нет ответа' }; '{0:HH:mm:ss} {1} {2:N2}s' -f (Get-Date), $c, ((Get-Date) - $s).TotalSeconds; Start-Sleep -Milliseconds 500 }
+   ```
+
    Попросите агента в `/dev-ui` разобрать упавший прогон. Пока инструмент ждёт GitHub, ответы `/health` задерживаются, а код `000` значит, что ответа не было дольше секунды: настоящая проба засчитала бы неудачу. Остановить опрос — Ctrl+C. После исправления повторите и сравните. Чтобы снова увидеть зависание уже с исправленным кодом, временно уберите обёртку в `assistant/agents/github_agent/agent.py`: `tools=[list_workflow_runs, get_failed_job_logs, read_repo_file]` вместо `offload_blocking_tools([...])`, а после проверки верните.
 2. **Почините** `offload_blocking_tools`: синхронную функцию обернуть в `async def`, которая ждёт `asyncio.to_thread`. Через `functools.wraps`, иначе модель получит инструмент с другими параметрами — это тоже проверяется тестом.
 3. **Ответьте в пулл-реквесте (PR):** в ADK 2.x есть встроенный `RunConfig(tool_thread_pool_config=...)`. Почему в этом проекте он не спасает `/health` в `adk web`, а обёртка спасает? (Подсказка: кто создаёт `RunConfig`, когда запрос приходит через `get_fast_api_app`.)
