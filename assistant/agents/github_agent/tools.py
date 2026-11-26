@@ -138,16 +138,17 @@ def get_failed_job_logs(run_id: int, tail_lines: int = 150) -> dict[str, Any]:
 
 
 @_errors_as_result
-def read_repo_file(path: str, ref: str = "main") -> dict[str, Any]:
+def read_repo_file(path: str, ref: str = "") -> dict[str, Any]:
     """Reads a text file from the repository.
 
     Args:
         path: Path from the repository root, e.g. "autotests/tests/cart.spec.ts".
-        ref: Branch, tag or commit sha. Defaults to "main".
+        ref: Branch, tag or commit sha. Empty: the repository's default branch.
 
     Returns:
         {"path", "ref", "content"}
     """
     # TODO М1.2: GET /repos/{repo}/contents/{path}?ref=... with accept="application/vnd.github.raw+json"
-    #  returns the file as plain text. Strip a leading "/" from path.
+    #  returns the file as plain text. Strip a leading "/" from path. Send ref only when it is set:
+    #  without it GitHub reads the default branch (a fork may have no "main", or "main" may be another module's).
     raise NotImplementedError("М1.2: read_repo_file")
