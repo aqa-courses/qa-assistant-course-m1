@@ -75,6 +75,12 @@ def check_tools() -> None:
         ok(f"Python {sys.version.split()[0]}")
     else:
         fail(f"Python {sys.version.split()[0]}: нужен 3.11 или новее")
+    try:
+        import ssl
+        ssl.create_default_context()
+    except ssl.SSLError as e:
+        fail(f"Python не читает сертификаты системы ({e}): ADK упадёт уже на импорте, а с ним и тесты. "
+             "Что делать — README, «Окружение»")
     if sys.prefix == sys.base_prefix:
         warn("виртуальное окружение не активировано (README, «Окружение»)")
     missing = missing_packages()
