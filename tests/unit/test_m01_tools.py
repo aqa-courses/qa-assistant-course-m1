@@ -29,6 +29,14 @@ def test_failed_job_logs_only_failed_jobs_cut_at_the_last_error(monkeypatch):
     assert not any(line.startswith("2026-") for line in lines)
 
 
+def test_log_helpers_that_module_5_reuses():
+    lines = tools._clean_log("2026-11-20T10:00:00.1234567Z \x1b[31mfail\x1b[0m\n2026-11-20T10:00:01.0000000Z ok")
+    assert lines == ["fail", "ok"]
+    log = ["a", "##[error]first", "b", "##[error]last", "Post job cleanup."]
+    assert tools._log_tail(log, 2) == "b\n##[error]last"
+    assert tools._log_tail(["a", "b", "c"], 2) == "b\nc"  # no errors: the end of the log
+
+
 def test_read_repo_file(monkeypatch):
     calls = fake_github.install(monkeypatch)
     result = tools.read_repo_file("/autotests/tests/cart.spec.ts", ref="m01-start")

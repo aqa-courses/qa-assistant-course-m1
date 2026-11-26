@@ -99,6 +99,21 @@ def list_workflow_runs(workflow: str = "e2e.yml", branch: str = "", status: str 
     } for r in runs[:limit]]}
 
 
+def _clean_log(raw: str) -> list[str]:
+    """The log as lines, without timestamps and terminal colors. Module 5 reuses it."""
+    # TODO М1.2: strip _TIMESTAMP and _ANSI, split into lines.
+    raise NotImplementedError("М1.2: _clean_log")
+
+
+def _log_tail(lines: list[str], tail_lines: int) -> str:
+    """Up to tail_lines lines that end with the last ##[error]: after it the runner only cleans up.
+
+    Without any ##[error], the last tail_lines lines. Module 5 reuses it.
+    """
+    # TODO М1.2
+    raise NotImplementedError("М1.2: _log_tail")
+
+
 @_errors_as_result
 def get_failed_job_logs(run_id: int, tail_lines: int = 150) -> dict[str, Any]:
     """Returns the failed jobs of a workflow run: error annotations and the end of each log.
@@ -116,8 +131,8 @@ def get_failed_job_logs(run_id: int, tail_lines: int = 150) -> dict[str, Any]:
     """
     # TODO М1.2: GET /repos/{repo}/actions/runs/{run_id}/jobs?filter=latest, keep jobs with
     #  conclusion "failure"; for each, GET /repos/{repo}/actions/jobs/{id}/logs
-    #  (accept="application/vnd.github.raw"). Clean the log with _TIMESTAMP and _ANSI,
-    #  collect the _ERROR lines, cut the tail at the last of them.
+    #  (accept="application/vnd.github.raw"). Clean the log with _clean_log,
+    #  collect the _ERROR lines, cut the tail with _log_tail.
     raise NotImplementedError("М1.2: get_failed_job_logs")
 
 
