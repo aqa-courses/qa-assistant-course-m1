@@ -80,7 +80,7 @@ def check_tools() -> None:
         ssl.create_default_context()
     except ssl.SSLError as e:
         fail(f"Python не читает сертификаты системы ({e}): ADK упадёт уже на импорте, а с ним и тесты. "
-             "Что делать — README, «Окружение»")
+             "Что делать, написано в README, «Окружение»")
     if sys.prefix == sys.base_prefix:
         warn("виртуальное окружение не активировано (README, «Окружение»)")
     missing = missing_packages()
@@ -95,7 +95,7 @@ def check_tools() -> None:
         fail("Docker не установлен или не запущен (Docker Desktop должен работать)")
     node = run("node", "--version")
     if not node:
-        fail("Node.js не найден: нужен 24 (автотесты; с модуля 3 — браузер для агента)")
+        fail("Node.js не найден: нужен 24 (автотесты, а с модуля 3 и браузер для агента)")
     elif int(node.lstrip("v").split(".")[0]) < 24:
         warn(f"Node.js {node}: курс проверен на 24")
     else:
@@ -166,7 +166,7 @@ def check_model(env: dict[str, str]) -> None:
     elif status == 401:
         fail("ключ Claude не принят: скопируйте его заново из консоли Claude")
     elif status == 403:
-        fail("ключ Claude отклонён (403): API недоступен из вашей страны, список стран — в README")
+        fail("ключ Claude отклонён (403): API недоступен из вашей страны, список стран есть в README")
     else:
         warn(f"api.anthropic.com не ответил как обычно (код {status}): нет сети?")
 
@@ -191,7 +191,7 @@ def check_github(env: dict[str, str]) -> None:
         return
     ok(f"{repo} виден")
     if not info.get("fork"):
-        warn(f"{repo} — не форк. Агенты будут работать с ним; так и задумано?")
+        warn(f"{repo} не форк. Агенты будут работать с ним; так и задумано?")
     if not info.get("has_issues"):
         fail("Issues выключены: Settings → General → Features → Issues (нужны с модуля 2)")
     status, branches = get(f"{api}/branches?per_page=100", headers)
