@@ -6,6 +6,7 @@
 # cryptography with a wheel for them.
 # Update in a separate PR: a clean venv, pip install -e ".[dev]", pytest tests, pip freeze --exclude-editable,
 # then the markers below again.
+a2a-sdk==0.3.26
 aiohappyeyeballs==2.7.1
 aiohttp==3.14.5
 aiosignal==1.4.0
@@ -46,6 +47,7 @@ h11==0.16.0
 httpcore==1.0.9
 httpcore2==2.16.2
 httpx==0.28.1
+httpx-sse==0.4.3
 httpx2==2.16.2
 idna==3.20
 iniconfig==2.3.1
