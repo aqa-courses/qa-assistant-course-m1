@@ -1,6 +1,6 @@
-"""Check the course environment before module 1: python scripts/doctor.py
+"""Check the course environment: python scripts/doctor.py, before module 1 and after every merge.
 
-Python, Docker, Node.js, .env, the fork and the token, the model key. Nothing is
+Python and the packages from pyproject.toml, Docker, Node.js, .env, the fork and the token, the model key. Nothing is
 written anywhere and no tokens are spent: the model key is checked by listing
 models. Secrets are never printed.
 """
@@ -77,11 +77,11 @@ def check_tools() -> None:
         fail(f"Python {sys.version.split()[0]}: нужен 3.11 или новее")
     if sys.prefix == sys.base_prefix:
         warn("виртуальное окружение не активировано (README, «Окружение»)")
-    try:
-        import google.adk  # noqa: F401
-        ok("пакеты курса установлены")
-    except ImportError:
-        fail('пакеты не установлены: pip install -e ".[dev]"')
+    missing = missing_packages()
+    if missing:
+        fail(f'не установлены {", ".join(missing)}: pip install -e ".[dev]" (заготовка модуля могла добавить зависимости)')
+    else:
+        ok("все зависимости из pyproject.toml установлены")
     docker = run("docker", "version", "--format", "{{.Server.Version}}")
     if docker:
         ok(f"Docker {docker}")
@@ -94,6 +94,49 @@ def check_tools() -> None:
         warn(f"Node.js {node}: курс проверен на 24")
     else:
         ok(f"Node.js {node}")
+    if (ROOT / "autotests" / "node_modules" / "@playwright" / "test").exists():
+        ok("зависимости автотестов установлены")
+    else:
+        warn("автотесты не установлены, они нужны с модуля 4: cd autotests && npm ci && npx playwright install chromium")
+
+
+def missing_packages() -> list[str]:
+    """Requirements of pyproject.toml (and the dev extra) that are not installed, extras included."""
+    import re
+    import tomllib
+    from importlib import metadata
+    try:
+        from packaging.requirements import Requirement
+    except ImportError:
+        Requirement = None
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    wanted = [*project.get("dependencies", []), *project.get("optional-dependencies", {}).get("dev", [])]
+    missing = []
+    for line in wanted:
+        match = re.match(r"\s*([A-Za-z0-9_.\-]+)\s*(?:\[([^\]]*)\])?", line)
+        name, extras = match.group(1), [e.strip() for e in (match.group(2) or "").split(",") if e.strip()]
+        try:
+            metadata.version(name)
+        except metadata.PackageNotFoundError:
+            missing.append(name)
+            continue
+        for extra in extras:
+            for dep in metadata.requires(name) or []:
+                if Requirement is not None:
+                    req = Requirement(dep)
+                    if not req.marker or not req.marker.evaluate({"extra": extra}):
+                        continue
+                    dep_name = req.name
+                elif re.search(rf"extra\s*==\s*['\"]{re.escape(extra)}['\"]", dep):
+                    dep_name = re.match(r"\s*([A-Za-z0-9_.\-]+)", dep).group(1)
+                else:
+                    continue
+                try:
+                    metadata.version(dep_name)
+                except metadata.PackageNotFoundError:
+                    missing.append(f"{name}[{extra}]")
+                    break
+    return missing
 
 
 def check_model(env: dict[str, str]) -> None:
@@ -183,7 +226,7 @@ def main() -> None:
         env = read_env()
         check_model(env)
         check_github(env)
-    print("\nВсё готово к модулю 1." if not failed else "\nИсправьте строки с «НЕТ» и запустите проверку ещё раз.")
+    print("\nВсё готово." if not failed else "\nИсправьте строки с «НЕТ» и запустите проверку ещё раз.")
     sys.exit(1 if failed else 0)
 
 
