@@ -10,3 +10,6 @@ playwright-report/
 results/
 *.egg-info/
 .adk/
+
+# the course author's working copy: AGENTS.md turns the tutor mode off
+.course-author
