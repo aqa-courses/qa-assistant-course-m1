@@ -1,0 +1,111 @@
+# The versions the course is tested with: all tests pass with exactly this set on Python 3.12
+# (Docker and CI). Install with them:
+#   pip install -e ".[dev]" -c constraints.txt
+# pyproject.toml keeps ranges; this file pins the whole tree, so two students get the same libraries.
+# Not measured on 3.11: numpy 2.5 needs 3.12, so 3.11 gets the last 2.4. Intel Macs get the last
+# cryptography with a wheel for them.
+# Update in a separate PR: a clean venv, pip install -e ".[dev]", pytest tests, pip freeze --exclude-editable,
+# then the markers below again.
+aiohappyeyeballs==2.7.1
+aiohttp==3.14.5
+aiosignal==1.4.0
+aiosqlite==0.22.1
+alembic==1.20.1
+annotated-doc==0.0.7
+annotated-types==0.8.0
+anthropic==2.12.0
+anyio==4.16.0
+asyncpg==0.32.0
+attrs==26.1.0
+Authlib==1.9.10
+certifi==2026.11.20
+cffi==2.1.1
+charset-normalizer==3.5.3
+click==8.5.1
+cryptography==50.0.2; sys_platform != "darwin" or platform_machine != "x86_64"
+cryptography==48.0.1; sys_platform == "darwin" and platform_machine == "x86_64"
+distro==1.9.0
+docstring_parser==0.18.0
+fastapi==0.165.0
+frozenlist==1.8.0
+google-adk==2.15.0
+google-api-core==2.44.0
+google-auth==2.63.1
+google-cloud-core==2.8.0
+google-cloud-monitoring==2.32.0
+google-cloud-spanner==3.72.1
+google-genai==2.34.0
+googleapis-common-protos==1.76.0
+graphviz==0.21
+greenlet==3.5.6
+grpc-google-iam-v1==0.14.6
+grpc-interceptor==0.15.4
+grpcio==1.85.3
+grpcio-status==1.85.3
+h11==0.16.0
+httpcore==1.0.9
+httpcore2==2.16.2
+httpx==0.28.1
+httpx2==2.16.2
+idna==3.20
+iniconfig==2.3.1
+jiter==0.19.0
+joserfc==1.8.0
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+Mako==1.4.3
+MarkupSafe==3.0.4
+mcp==2.3.0
+mcp-types==2.3.0
+mmh3==5.3.1
+multidict==7.2.1
+numpy==2.4.6; python_version < "3.12"
+numpy==2.5.5; python_version >= "3.12"
+openai==2.54.0
+opentelemetry-api==1.45.2
+opentelemetry-exporter-http-transport==0.66b2
+opentelemetry-exporter-otlp-common==0.66b2
+opentelemetry-exporter-otlp-proto-common==1.45.2
+opentelemetry-exporter-otlp-proto-http==1.45.2
+opentelemetry-proto==1.45.2
+opentelemetry-resourcedetector-gcp==1.14.0
+opentelemetry-sdk==1.45.2
+opentelemetry-semantic-conventions==0.66b2
+packaging==26.3
+pluggy==1.7.0
+propcache==0.5.4
+proto-plus==1.29.0
+protobuf==7.36.2
+pyasn1==0.6.5
+pyasn1_modules==0.4.2
+pycparser==3.12
+pydantic==2.14.4
+pydantic_core==2.50.5
+Pygments==2.21.0
+PyJWT==2.15.1
+pytest==9.2.0
+pytest-asyncio==1.5.0
+python-dotenv==1.2.4
+python-multipart==0.0.34
+PyYAML==6.0.4
+rank-bm25==0.2.2
+referencing==0.37.0
+requests==2.34.2
+rpds-py==2026.9.1
+sniffio==1.3.1
+snowballstemmer==3.1.1
+SQLAlchemy==2.1.9
+sqlalchemy-spanner==1.21.0
+sqlparse==0.6.1
+sse-starlette==3.7.1
+starlette==1.10.0
+tenacity==9.1.4
+tqdm==4.70.1
+truststore==0.10.5
+typing-inspection==0.4.5
+typing_extensions==4.16.0
+urllib3==2.8.0
+uvicorn==0.54.0
+watchdog==7.1.1
+websockets==15.0.1
+yarl==1.25.1

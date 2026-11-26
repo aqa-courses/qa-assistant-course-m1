@@ -64,7 +64,7 @@ git push -u origin m01            # пулл-реквест m01 → work; авт
 # каждый следующий модуль, например второй
 git switch work && git pull
 git merge origin/m02-start        # заготовка модуля поверх вашего кода
-pip install -e ".[dev]"           # модуль мог добавить зависимости
+pip install -e ".[dev]" -c constraints.txt   # модуль мог добавить зависимости
 git push
 git switch -c m02                 # и дальше так же: пулл-реквест m02 → work
 ```
@@ -149,13 +149,15 @@ git push -u origin work
 git clone https://github.com/<ваш логин>/<ваш форк>.git && cd <ваш форк>
 cp .env.example .env              # ANTHROPIC_API_KEY, GITHUB_REPO, GITHUB_TOKEN
 python -m venv .venv && . .venv/bin/activate   # Git Bash на Windows: . .venv/Scripts/activate
-pip install -e ".[dev]"
+pip install -e ".[dev]" -c constraints.txt   # проверенные версии библиотек
 
 python scripts/doctor.py           # проверка окружения, форка и токена
 
 docker build -t shoplite shoplite && docker run --rm -p 8000:8000 shoplite   # стенд на :8000, занимает терминал
 adk web --port 8080 assistant/agents                                          # во втором терминале: чат с агентами на :8080
 ```
+
+`-c constraints.txt` ставит ровно те версии библиотек, на которых курс проверен. `pyproject.toml` задаёт диапазоны, и без этого файла два студента в разные дни получили бы разные версии ADK, Anthropic SDK и OpenTelemetry, а с ними и разное поведение. Файл обновляет автор курса вместе с заготовками модулей, поэтому после `git merge origin/mNN-start` команда установки та же.
 
 Стенд нужен с модуля 3. В модуле 1 агент читает прогоны Actions в форке, а там стенд поднимает сам workflow. Чтобы остановить стенд, нажмите Ctrl+C в его терминале. Модуль 4 запускает свой стенд с флагами: тогда сначала остановите обычный. Стенд песочницы модуля 9 живёт в своей сети Docker и обычному не мешает.
 
