@@ -19,5 +19,5 @@ def offload_blocking_tools(tools: list[Any]) -> list[Any]:
     must come back as an ``async def`` that the model sees exactly like the
     original: same name, docstring and parameters.
     """
-    # TODO М1.4 (homework): first reproduce the hang, see modules/m01/README.md. Then fix it here.
+    # TODO М1 ДЗ (homework): first reproduce the hang, see modules/m01/README.md. Then fix it here.
     return list(tools)
