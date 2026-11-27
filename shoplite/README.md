@@ -5,6 +5,7 @@
 ## Запуск
 
 ```bash
+# все команды этого файла запускаются из папки shoplite
 docker build -t shoplite .
 docker run --rm -p 8000:8000 shoplite
 # или без Docker:
@@ -12,7 +13,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --port 8000
 ```
 
-Открой http://localhost:8000. Документация API: http://localhost:8000/docs.
+Откройте http://localhost:8000. Документация API: http://localhost:8000/docs.
 
 | Пользователь | Пароль | Особенность |
 |---|---|---|
@@ -30,11 +31,11 @@ uvicorn app.main:app --port 8000
 curl -X POST localhost:8000/__chaos -H 'Content-Type: application/json' -d '{"ui_version": 2}'
 ```
 
-| Переменная | Поле в `/__chaos` | Что ломает | Класс в RCA |
+| Переменная | Поле в `/__chaos` | Что ломает | Класс причины в разборе падений (RCA, модуль 5) |
 |---|---|---|---|
 | `UI_VERSION=2` | `ui_version` | переименованы `data-test`, корзина свёрстана карточками | `ui_change` |
 | `BUG_CART_TOTAL=1` | `bug_cart_total` | итог корзины не учитывает скидку промокода | `product_bug` |
-| `FLAKY_SEARCH=0.3` | `flaky_search` | поиск с вероятностью p отвечает с задержкой 0–5 с | `flaky_test` |
+| `FLAKY_SEARCH=0.3` | `flaky_search` | поиск с вероятностью p (значение флага, от 0 до 1) отвечает с задержкой 0–5 с | `flaky_test` |
 | `DB_DOWN=1` | `db_down` | страницы, API и `/health` отвечают 503 | `infrastructure` |
 | `FEATURE_WISHLIST=1` | `feature_wishlist` | появляется «Избранное», на которое нет тестов | дыра в покрытии |
 
@@ -47,7 +48,7 @@ curl -X POST localhost:8000/__chaos -H 'Content-Type: application/json' -d '{"ui
 
 Если задан `CHAOS_TOKEN`, эндпоинты `/__*` требуют заголовок `X-Chaos-Token`.
 
-## Правила, которые выглядят как баги, но так задумано
+## Правила, которые похожи на баги, но так задуманы
 
 Они описаны в документации продукта (`docs/product`), чтобы агенту триажа было что процитировать:
 
