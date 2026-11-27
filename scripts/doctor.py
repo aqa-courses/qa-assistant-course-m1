@@ -103,7 +103,7 @@ def check_tools() -> None:
     if (ROOT / "autotests" / "node_modules" / "@playwright" / "test").exists():
         ok("зависимости автотестов установлены")
     else:
-        warn("автотесты не установлены, они нужны с модуля 4: cd autotests && npm ci && npx playwright install chromium")
+        warn("автотесты не установлены, они нужны с модуля 4: cd autotests && npm ci && npx playwright install chromium && cd ..")
 
 
 def missing_packages() -> list[str]:
