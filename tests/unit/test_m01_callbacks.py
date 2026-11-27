@@ -24,6 +24,14 @@ async def test_tokens_are_counted_per_session(monkeypatch):
     assert result.state[obs.MODEL_CALLS] == 2
 
 
+async def test_every_tool_call_is_logged(monkeypatch, caplog):
+    fake_github.install(monkeypatch)
+    _, agent = scripted(call("list_workflow_runs", limit=2), text("Упал прогон 1002"))
+    with caplog.at_level("INFO", logger="assistant"):
+        await run_agent(agent, "Что с последним прогоном?")
+    logged = " | ".join(r.getMessage() for r in caplog.records if r.name == "assistant")
+    assert "list_workflow_runs" in logged and "github_agent" in logged, "log the tool name and the agent name"
+
 
 async def test_thinking_is_counted_as_output():
     """Claude bills thinking as output tokens; ADK reports it apart from the visible answer."""
