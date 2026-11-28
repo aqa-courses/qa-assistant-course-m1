@@ -50,7 +50,7 @@ jobs:
             -e DB_DOWN='${{ inputs.db_down && '1' || '0' }}' \
             shoplite
           # /__chaos answers even with DB_DOWN, unlike /health
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             curl -sf "$SHOPLITE_URL/__chaos" && exit 0
             sleep 1
           done
