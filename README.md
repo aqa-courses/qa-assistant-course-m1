@@ -52,6 +52,8 @@ git push -u origin m01            # пулл-реквест m01 → m01-start в
 
 Нужны Python 3.11+, Docker, Node.js 24 (для автотестов) и аккаунт GitHub.
 
+**На Windows сначала одна проверка.** Выполните `python -c "import ssl; ssl.create_default_context()"`. Если команда упала с `[ASN1] nested asn1 error` или `cadata does not contain a certificate`, Python на этом компьютере не может прочитать хранилище сертификатов Windows, и курс в обычном окружении Windows не пойдёт. Тогда сразу переходите в WSL 2 и клонируйте форк уже туда: почему так и как устроить окружение, написано в конце раздела «Окружение». Если команда ничего не вывела, всё в порядке.
+
 На Windows команды удобнее всего запускать в Git Bash: он ставится вместе с Git for Windows, и команды из README работают как есть. В PowerShell: `Copy-Item .env.example .env` вместо `cp`, `.venv\Scripts\Activate.ps1` для окружения, а переменную перед командой задают так: `$env:RUN_AGENT_EVALS = "1"; pytest tests/eval`.
 
 ### Форк и токен GitHub
