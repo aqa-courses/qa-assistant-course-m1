@@ -92,7 +92,7 @@ def check_tools() -> None:
     if docker:
         ok(f"Docker {docker}")
     else:
-        fail("Docker не установлен или не запущен (Docker Desktop должен работать)")
+        warn("Docker не установлен или не запущен: он нужен с модуля 3, для стенда (Docker Desktop должен работать)")
     node = run("node", "--version")
     if not node:
         fail("Node.js не найден: нужен 24 (автотесты, а с модуля 3 и браузер для агента)")
@@ -103,7 +103,7 @@ def check_tools() -> None:
     if (ROOT / "autotests" / "node_modules" / "@playwright" / "test").exists():
         ok("зависимости автотестов установлены")
     else:
-        warn("автотесты не установлены, они нужны с модуля 4: cd autotests && npm ci && npx playwright install chromium")
+        warn("автотесты не установлены, они нужны с модуля 4: cd autotests && npm ci && npx playwright install chromium && cd ..")
 
 
 def missing_packages() -> list[str]:
@@ -193,7 +193,7 @@ def check_github(env: dict[str, str]) -> None:
     if not info.get("fork"):
         warn(f"{repo} не форк. Агенты будут работать с ним; так и задумано?")
     if not info.get("has_issues"):
-        fail("Issues выключены: Settings → General → Features → Issues (нужны с модуля 2)")
+        warn("Issues выключены: Settings → General → Features → Issues (нужны с модуля 2)")
     status, branches = get(f"{api}/branches?per_page=100", headers)
     names = {b["name"] for b in branches} if status == 200 and isinstance(branches, list) else set()
     if status != 200:

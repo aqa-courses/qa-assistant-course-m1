@@ -5,14 +5,14 @@
 ## Запуск
 
 ```bash
-# стенд должен работать на localhost:8000 (см. ../shoplite)
+# все команды из папки autotests; стенд должен работать на localhost:8000 (см. ../shoplite)
 npm ci
 npx playwright install chromium
 npx playwright test
 npx playwright show-report
 ```
 
-Другой адрес стенда: `SHOPLITE_URL=http://host:port`. Браузер из системы вместо скачанного: `PW_CHANNEL=chrome`.
+Другой адрес стенда: `SHOPLITE_URL=http://host:port npx playwright test`, в PowerShell `$env:SHOPLITE_URL = "http://host:port"` перед запуском. Браузер из системы вместо скачанного: `PW_CHANNEL=chrome`.
 
 ## Соглашения
 
