@@ -123,11 +123,12 @@ def get_failed_job_logs(run_id: int, tail_lines: int = 150) -> dict[str, Any]:
 
     Args:
         run_id: Workflow run id from list_workflow_runs.
-        tail_lines: How many log lines before the last error to return per failed job, 20..500.
+        tail_lines: How many log lines to return per failed job, the last error line included, 20..500.
 
     Returns:
         {"run_id", "failed_jobs": [{"id", "name", "failed_steps", "errors", "log_tail", "url"}]}.
-        "errors" are the "##[error]" lines. An empty failed_jobs list means no job of the run failed.
+        "errors" are the texts of the "##[error]" lines, without the "##[error]" prefix.
+        An empty failed_jobs list means no job of the run failed.
     """
     tail_lines = max(20, min(int(tail_lines), 500))
     repo = _repo()
