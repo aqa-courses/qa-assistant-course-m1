@@ -43,7 +43,8 @@ def truncate_tool_response(tool: BaseTool, args: dict[str, Any], tool_context: T
     Return {"truncated": True, "original_chars": ..., "head": ..., "note": ...},
     the note telling the model what happened. Return None for a small result.
     """
-    # TODO М1.3
+    # TODO М1.3: measure a result that is not a string as json.dumps(..., ensure_ascii=False, default=str).
+    #  With the default ensure_ascii=True every Cyrillic letter becomes six characters (\u0410).
     return None
 
 
